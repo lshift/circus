@@ -1,0 +1,9 @@
+requirements:
+  local-file-storage: 
+    - BUILD_DIR   # For executing the builds
+    - DATA_DIR    # For staging generated acts
+  own-dbus-service:
+    - com.deployacircus.Booth
+  execution-user: booth
+  user-profile: 
+    - booth

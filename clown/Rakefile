@@ -1,0 +1,24 @@
+# coding:utf-8
+require 'rubygems'
+
+begin
+  require 'spec/rake/spectask'
+rescue LoadError
+  raise 'Run `gem install rspec` to be able to run specs'
+else
+  task :clear_tmp do
+    FileUtils.rm_rf(File.expand_path("../tmp", __FILE__))
+  end
+
+  desc "Run specs"
+  Spec::Rake::SpecTask.new do |t|
+    t.spec_files = FileList['spec/**/*_spec.rb']
+    t.spec_opts = %w(-fs --color)
+    t.ruby_opts = ['-rspec/helpers/env']
+    t.libs = ['lib']
+    # t.warning = true
+  end
+  task :spec => :clear_tmp
+end
+
+task :default => :spec

@@ -1,0 +1,82 @@
+require 'net/ssh'
+require 'net/scp'
+require 'uri'
+require 'highline/import'
+
+require 'tasks/installer.tasks'
+
+task :install => [
+  'install:access', 'install:clown', 'install:acts'
+]
+namespace :install do
+  task :ensure_target do
+    @target = ENV['TARGET']
+    unless @target
+      puts "Please specify a TARGET host, such as ssh://myserver.com"
+      fail
+    end
+    @uri = URI.parse(@target)
+    
+    @current_user = ENV['USER']
+    @deploy_target = "ssh://#{@current_user}@#{@uri.host}"
+  end
+    
+  task :ensure_root_ssh => [:ensure_target] do
+    root_pw = ask("Enter root password for #{@uri.host}: ") { |q| q.echo = false }
+
+    opts = {:port => @uri.port || 22, :password => root_pw}
+    @ssh = Net::SSH.start(@uri.host, 'root', opts)
+    @scp = Net::SCP.new(@ssh)
+  end
+  
+  task :access => [:ensure_root_ssh] do
+    @ssh.exec!('groupadd admin')
+    
+    user_exists = (@ssh.exec!("id #{@current_user} >/dev/null 2>/dev/null; echo $?").strip == '0')
+    unless user_exists
+      log_remote_cmd(@ssh, "useradd -G admin #{@current_user}")
+    end
+    
+    current_key = File.read("#{ENV['HOME']}/.ssh/id_rsa.pub").strip
+    log_remote_cmd(@ssh, "mkdir -p ~#{@current_user}/.ssh")
+    log_remote_cmd(@ssh, "echo '#{current_key}' >~#{@current_user}/.ssh/authorized_keys")
+  end
+  
+  task :clown => [:ensure_root_ssh] do
+    log_remote_cmd(@ssh, "rm -rf /tmp/circus-install; mkdir -p /tmp/circus-install")
+
+    @scp.upload!('config', '/tmp/circus-install', :recursive => true)
+    @scp.upload!('../servers/common/cookbooks', '/tmp/circus-install/common-cookbooks', :recursive => true)
+    @scp.upload!('../fasttrack/cookbooks', '/tmp/circus-install/fasttrack-cookbooks', :recursive => true)
+
+    log_remote_cmd(@ssh, 'apt-get install -y rubygems ohai chef')
+    log_remote_cmd(@ssh, 'cd /tmp/circus-install; chef-solo -c config/solo.rb -j config/dna.json')
+
+    # Copy up all necessary files to bootstrap a clown
+#    @scp.upload!('../packages/debs', '/tmp/circus-install/debs', :recursive => true)
+#    @scp.upload!('files/local.list', '/etc/apt/sources.list.d')
+  
+    # Install the clown (force remove any previous versions first)
+#    log_remote_cmd(@ssh, "sudo rm -rf /usr/lib/clown/lib")
+#    log_remote_cmd(@ssh, "sudo apt-get remove clown --purge -y --force-yes")
+#    log_remote_cmd(@ssh, "sudo apt-get update")
+#    log_remote_cmd(@ssh, "sudo apt-get install clown -y --force-yes")
+#    log_remote_cmd(@ssh, "start svscan")
+  end
+  
+  # task :gem_bundler => [:ensure_root_ssh] do
+  #   gem_version = @ssh.exec!('gem --version').strip
+  #   unless ['1.3.6', '1.3.7'].include? gem_version
+  #     log_remote_cmd(@ssh, 'cd /tmp/circus-install; wget http://production.cf.rubygems.org/rubygems/rubygems-1.3.7.tgz')
+  #     log_remote_cmd(@ssh, 'cd /tmp/circus-install; tar -xzf rubygems-1.3.7.tgz && cd rubygems-1.3.7 && ruby setup.rb')
+  #   end
+  #   log_remote_cmd(@ssh, "which bundle >/dev/null 2>/dev/null || gem install bundler -v 0.9.24")
+  # end
+end
+
+def log_remote_cmd(ssh, cmd)
+  ssh.exec!(cmd) do |channel, stream, data|
+    STDOUT << data if stream == :stdout
+    STDERR << data if stream == :stderr
+  end
+end

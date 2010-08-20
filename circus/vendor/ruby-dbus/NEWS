@@ -1,0 +1,104 @@
+= Ruby D-Bus NEWS
+
+Note about bug numbers:
+ Ticket#1 - https://trac.luon.net/ruby-dbus/ticket/1
+ Issue#1  - http://github.com/mvidner/ruby-dbus/issues#issue/1
+ bnc#1    - https://bugzilla.novell.com/show_bug.cgi?id=1
+
+== Ruby D-Bus 0.3.0 - 2010-03-28
+
+Bug fixes:
+ 
+ * Fixed "undefined method `get_node' for nil:NilClass"
+   on Ubuntu Karmic (Ticket#34).
+ * Get the session bus address even if unset in ENV (Issue#4).
+ * Improved exceptions a bit:
+   UndefinedInterface, InvalidMethodName, NoMethodError, no RuntimeException
+
+ These are by Klaus Kaempf:
+ * Make the signal dispatcher call all handlers (Issue#3).
+ * Run on Ruby < 1.8.7 (Issue#2).
+ * Avoid needless DBus::IncompleteBufferException (Ticket#33).
+ * Don't ignore DBus Errors in request_service, raise them (Ticket#32).
+
+Features:
+
+ * Automatic signature inference for variants.
+ * Introduced FormalParameter where a plain pair had been used.
+
+== Ruby D-Bus 0.2.12 - 2010-01-24
+
+Bug fixes:
+
+ * Fixed a long-standing bug where a service activated by the bus
+   would fail with "undefined method `get_node' for nil:NilClass"
+   (Tickets#25 and #29).
+
+== Ruby D-Bus 0.2.11 - 2009-11-12
+
+Features:
+
+ * Added DBus::Service#unexport (da1l6).
+
+Bug fixes:
+
+ * Return org.freedesktop.DBus.Error.UnknownObject instead of crashing
+   (Ticket#31).
+ * Rescue exceptions in dbus_methods and reply with DBus errors instead of
+   crashing (da1l6).
+ * Better exception messages when sending nil, or mismatched structs.
+ * Call mktemp without --tmpdir, to build on older distros.
+
+== Ruby D-Bus 0.2.10 - 2009-09-10
+
+Bug fixes:
+
+ * DBus::Service.exists? fixed (Murat Demirten).
+ * Ruby 1.9 fixes (Jedediah Smith).
+ * Fixed an endless sleep in DBus::Main.run (bnc#537401).
+ * Added details to PacketMarshaller exceptions (bnc#538050).
+
+(bnc#FOO refers to https://bugzilla.novell.com/show_bug.cgi?id=FOO )
+
+== Ruby D-Bus "I'm not dead" 0.2.9 - 2009-08-26
+
+Thank you to Paul and Arnaud for starting the project. I, Martin
+Vidner, am continuing with it on GitHub.
+
+ * Fixed passing an array through a variant (no ticket).
+ * Fixed marshalling "av" (Ticket #30).
+ * Fixed variant alignment (Ticket #27).
+ * Added DBus::Main.quit.
+ * Mention the DBus interface in a NameError for an unknown method.
+ * Fixed ruby-1.9 "warning: default `to_a' will be obsolete".
+ * Added Rakefile and gemspec.
+
+== Ruby D-Bus "Thanks for all the fish" 0.2.1 - 2007-12-29
+
+More bugfixes, mostly supplied by users supplying us with patches.  Thanks!
+
+ * Support for new types added: 
+   - dict (courtesy of Drake Wilson);
+   - double (courtesy of Patrick Sissons);
+   - variant.
+ * Improved exception raise support (courtesy of Sjoerd Simons,
+   Patrick Sissons).
+ * Some polish (removed debug output, solved unnecessary warnings).
+ * Documentation updates, example fixes and updates.
+
+== Ruby D-Bus "Almost live from DebConf 7" 0.2.0 - 2007-06-02
+
+Again a bugfix release, also meant to be the public release
+for exploratory purposes. New in 0.2.0:
+
+ * Complete tutorial revamp.
+ * Relicensed to the LGPL.
+
+== Ruby D-Bus "Release Often" 0.1.1 - 2007-04-23
+
+Bugfix release.  Fixes hardcoded string for requesting bus names,
+found by Rudi Cilibrasi.
+
+== Ruby D-Bus "Happy Birthday Paul" 0.1.0 - 2007-04-17
+
+First release. Supports most of D-Bus' features.

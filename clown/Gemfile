@@ -1,0 +1,5 @@
+source :gemcutter
+path '../circus'
+
+gem "circus-deployment"
+gem "json", ">= 1.4.2"

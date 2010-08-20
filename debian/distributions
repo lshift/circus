@@ -1,0 +1,7 @@
+Origin: Circus
+Label: Circus Repository for Debian / Ubuntu etc
+Suite: testing
+Codename: highwire
+Architectures: arm hppa ia64 mips mipsel s390 sparc i386 amd64 powerpc source
+Components: main
+Description: Circus Repository for Debian / Ubuntu etc

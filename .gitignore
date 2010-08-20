@@ -1,0 +1,11 @@
+clown/build/*
+circus/pkg/
+packages/
+.vagrant
+.circus
+.bundle
+booth/vendor
+*~
+*.iml
+.idea/
+tmp/

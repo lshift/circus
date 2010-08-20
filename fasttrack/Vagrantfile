@@ -1,0 +1,22 @@
+Vagrant::Config.run do |config|
+  # This lucid box requires the following command to have been run:
+  #   vagrant box add lucid32v2 http://s3.lds.li/vagrant/lucid32v2.box 
+  config.vm.box = "lucid32v2"
+
+  config.vm.provisioner = :chef_solo
+  if ENV['ALT_CIRCUS_DEB_REPO']
+    config.chef.json.merge!({
+      :circus_repo => {:url => ENV['ALT_CIRCUS_DEB_REPO']}
+    }) 
+  end
+  
+  # Use both our node-specific cookbooks, and the common ones
+  config.chef.cookbooks_path = [
+    File.expand_path('../cookbooks', __FILE__), 
+    File.expand_path('../../servers/common/cookbooks', __FILE__)
+  ]
+
+  config.vm.network('192.168.11.10')
+  
+  config.vm.forward_port("ssh", 22, 22145)
+end

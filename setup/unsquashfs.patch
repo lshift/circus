@@ -1,0 +1,6 @@
+24a25
+> #include <sys/sysctl.h>
+1198c1199
+< 				name, FNM_PATHNAME|FNM_PERIOD|FNM_EXTMATCH) ==
+---
+> 				name, FNM_PATHNAME|FNM_PERIOD) ==

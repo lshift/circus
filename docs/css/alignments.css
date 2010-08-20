@@ -1,0 +1,74 @@
+/*
+ * = CSS alignments
+ * 
+ * This CSS file contains a small set of CSS classes
+ * for changing text and image alignment without inline code.
+ * 
+ * For example, to center an image in the middle of the line
+ * forget the deprecated <center> tag or 
+ * the old-fashioned align="center" attribute.
+ * Now you can use the centered class as follows:
+ * 
+ *  <div class="aligncenter">my text</div>
+ * 
+ * The class can be applied to any other tag 
+ * that supports CSS classes.
+ *
+ * @category        CSS
+ * @package         Defaults
+ * @author          Simone Carletti <weppos@weppos.net>
+ * @copyright       2003-2008 The Authors
+ * @license
+ * @version         
+ * @link            http://www.simonecarletti.com/
+ * @source          http://gist.github.com/4903
+ */
+
+
+/* -------------------------------
+            ALIGNMENTS
+------------------------------  */
+
+.textcenter {
+  text-align: center;
+}
+
+.textleft {
+  text-align: left;
+}
+
+.textright {
+  text-align: right;
+}
+
+.alignleft {
+  float: left;
+  display: inline;
+}
+
+.alignright {
+  float: right;
+  display: inline;
+}
+
+.aligncenter {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* -----      images     -----  */
+
+img.alignright {
+  padding: 4px;
+  margin: 0px 0px 2px 7px;
+}
+
+img.alignleft {
+  padding: 4px;
+  margin: 0px 7px 2px 0px;
+}
+
+img.aligncenter {
+  width: auto;
+}

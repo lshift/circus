@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd /usr/lib/clown
+exec ruby bin/clown -c /etc/clown/clown.config 2>&1

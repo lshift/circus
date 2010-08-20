@@ -1,0 +1,4 @@
+Application for managing access to Postgres database resources.
+Provides services allowing for Postgres databases and user credentials
+to be requested. Requires that the host it is being deployed to has Postgres
+installed and functional.

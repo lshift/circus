@@ -1,0 +1,18 @@
+server {
+  listen       80;
+  server_name  <%= @node[:repo_main][:hostname] %>;
+  
+  access_log  /var/log/nginx/localhost.access.log;
+
+  location / {
+    root   /var/www/circus-repo;
+    index  index.html index.htm;
+    
+    location /acts {
+      autoindex    on;
+    }
+    location /debian {
+      autoindex    on;
+    }
+  }
+}

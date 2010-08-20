@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/class/makefile.mk
+
+CLOWN_ROOT=$(DEB_DESTDIR)usr/lib/clown
+CLOWN_SERVICES=$(DEB_DESTDIR)etc/service
+CLOWN_CONFIG=$(DEB_DESTDIR)etc/clown
+DBUS_SYSTEM_CONFIG=$(DEB_DESTDIR)etc/dbus-1/system.d
+DBUS_SYSTEM_SERVICES=$(DEB_DESTDIR)usr/share/dbus-1/system-services
+
+DEB_MAKE_INSTALL_TARGET := install TARGET_DIR=$(CLOWN_ROOT) SERVICE_DIR=$(CLOWN_SERVICES) MAN_DIR=$(DEB_DESTDIR)usr/share/man/ ETC_DIR=$(CLOWN_CONFIG) DBUS_SYSTEM_CONFIG_DIR=$(DBUS_SYSTEM_CONFIG) DBUS_SYSTEM_SERVICE_DIR=$(DBUS_SYSTEM_SERVICES)
+DEB_MAKE_CLEAN_TARGET:= distclean
+
+DOCDIR=$(DEB_DESTDIR)usr/share/doc/clown/
+
+install/clown::
+	true

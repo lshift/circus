@@ -1,0 +1,4 @@
+requirements:
+    execution-user: root
+    own-dbus-service:
+      - com.deployacircus.Nginx

@@ -1,0 +1,5 @@
+requirements:
+  local-file-storage:
+    - DATA_DIR
+    
+web-app-port: 9088

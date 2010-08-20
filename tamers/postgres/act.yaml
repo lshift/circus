@@ -1,0 +1,5 @@
+purerb-app: postgres_tamer.rb
+requirements:
+    execution-user: postgres
+    own-dbus-service:
+      - com.deployacircus.Postgres

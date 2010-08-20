@@ -1,0 +1,34 @@
+Vagrant::Config.run do |config|
+  # All Vagrant configuration is done here. For a detailed explanation
+  # and listing of configuration options, please view the documentation
+  # online.
+
+  # Every Vagrant virtual environment requires a box to build off of.
+  # This lucid box requires the following command to have been run:
+  #   vagrant box add lucid32v2 http://s3.lds.li/vagrant/lucid32v2.box 
+  config.vm.box = "lucid32v2"
+
+  config.vm.provisioner = :chef_solo 
+  config.chef.json.merge!({
+    :jabber_domain => 'localhost',
+    :domain => 'mirror.lshift.net',
+    :apache => {:listen_ports => [9099]}
+  })
+  
+  # Use both our server-specific cookbooks, and the common ones
+  config.chef.cookbooks_path = [
+    File.expand_path('../cookbooks', __FILE__), 
+    File.expand_path('../../common/cookbooks', __FILE__)
+  ]
+
+  config.vm.network('192.168.11.5')
+  
+  config.vm.forward_port("ssh", 22, 22144)
+  config.vm.forward_port("actserver_http", 9088, 9088)
+  config.vm.forward_port("nginx_http", 80, 18080)
+  
+  config.vm.forward_port("booth", 3000, 3001)
+  
+  config.vm.share_folder("circus-packages", '/packages', File.expand_path('../../../packages', __FILE__))
+  config.vm.share_folder("circus", '/circus', File.expand_path('../../..', __FILE__))
+end

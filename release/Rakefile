@@ -1,0 +1,94 @@
+require 'net/ssh'
+require 'net/scp'
+require 'uri'
+require 'highline/import'
+
+require File.expand_path('../../rake/remote.tasks', __FILE__)
+
+task :clean do
+  rm_rf 'pkg_tmp'
+  rm_rf 'packages'
+end
+
+desc "Prepares the host to manage the Circus repository"
+task :prepare => 'remote:ensure_root_ssh' do
+  log_remote_cmd(@ssh, "rm -rf /tmp/circus-repo-install; mkdir -p /tmp/circus-repo-install")
+
+  @scp.upload!('config', '/tmp/circus-repo-install', :recursive => true)
+  @scp.upload!('cookbooks', '/tmp/circus-repo-install/cookbooks', :recursive => true)
+
+  log_remote_cmd(@ssh, 'apt-get install -y rubygems ohai chef')
+  log_remote_cmd(@ssh, 'cd /tmp/circus-repo-install; chef-solo -c config/solo.rb -j config/dna.json')
+end
+
+desc "Tags the current release"
+task :tag => :ensure_version do
+  tags = `git tag`.split("\n").map {|t| t.strip }
+  unless tags.include? "v#{@output_version}"
+    change_msg = ENV['MESSAGE'] || fail('Please specify a change message, such as MESSAGE="Minor bugfixes"')
+    current_changes=File.read('../clown/debian/changelog')
+    new_change = <<EOC
+clown (#{@output_version}-1) unstable; urgency=low
+
+  * #{change_msg}
+
+ -- Paul Jones <pauljones23@gmail.com>  #{Time.now.strftime('%a, %d %b %Y %H:%M:%S %z')}
+
+EOC
+    File.open('../clown/debian/changelog', 'w') do |f|
+      f.write(new_change)
+      f.write(current_changes)
+    end
+    sh "git commit -m \"[Release #{@output_version}]: #{change_msg}\" ../clown/debian/changelog"
+    sh "git tag v#{@output_version}"
+  else
+    puts "Tag v#{@output_version} already exists. Not tagging"
+  end
+end
+
+desc "Performs packaging on the newly tagged build"
+task :package => [:tag] do
+  packaging_vagrantdotfile = File.expand_path("../../servers/packaging/.vagrant", __FILE__)
+  current_repo = File.expand_path('../..', __FILE__)
+
+  rm_rf 'pkg_tmp'
+  sh "git clone #{current_repo} pkg_tmp"
+  sh "cd pkg_tmp && git checkout v#{@output_version}"
+  if File.exists? packaging_vagrantdotfile
+    cp packaging_vagrantdotfile, "pkg_tmp/servers/packaging/.vagrant"
+  end
+
+  sh "cd pkg_tmp && rake packaging:all VERSION=#{@output_version}"
+  sh 'mv pkg_tmp/packages packages'
+end
+
+desc "Publishes a build to the repository"
+task :publish => [:ensure_version, 'remote:ensure_root_ssh'] do
+  Rake::Task[:package].invoke unless File.exists?('packages')
+
+  # Remove any previous staged acts or debian repo
+  log_remote_cmd(@ssh, "rm -rf /var/www/circus-repo/debian-stage /var/www/circus-repo/acts/new")
+  
+  # Upload the debian repo and acts into staging locations
+  @scp.upload!('packages/debian', '/var/www/circus-repo/debian-stage', :recursive => true)
+  @scp.upload!('packages/acts', "/var/www/circus-repo/acts/new", :recursive => true)
+
+  # Activate the debian repository
+  log_remote_cmd(@ssh, 'rm -rf /var/www/circus-repo/debian-previous')
+  log_remote_cmd(@ssh, 'mv /var/www/circus-repo/debian /var/www/circus-repo/debian-previous')
+  log_remote_cmd(@ssh, 'mv /var/www/circus-repo/debian-stage /var/www/circus-repo/debian')
+  
+  # Move the acts into place
+  log_remote_cmd(@ssh, "rm -rf /var/www/circus-repo/acts/#{@output_version}")
+  log_remote_cmd(@ssh, "mv /var/www/circus-repo/acts/new /var/www/circus-repo/acts/#{@output_version}")
+  log_remote_cmd(@ssh, "chmod 644 /var/www/circus-repo/acts/#{@output_version}/*")
+  log_remote_cmd(@ssh, "ln -sf /var/www/circus-repo/acts/#{@output_version} /var/www/circus-repo/acts/current")
+end
+
+task :ensure_version do
+  @output_version = ENV['VERSION']
+  unless @output_version
+    puts "Please specify a released VERSION, such as 0.0.1"
+    fail
+  end
+end

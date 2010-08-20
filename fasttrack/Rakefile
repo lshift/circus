@@ -1,0 +1,67 @@
+begin
+  require 'vagrant'
+rescue LoadError
+  puts "The vagrant gem is required to build a node"
+  puts "  Execute: sudo gem install vagrant"
+  exit 1
+end
+
+namespace :node do
+  task :ensure_node_vm do
+    # Load a Vagrant environment for deployment, and ensure that it is up
+    @node_env = Vagrant::Environment.load!
+    @node_env.commands.subcommand 'up'
+  end
+
+  task :reprovision => [:ensure_node_vm] do
+    @node_env.commands.subcommand 'provision'
+  end
+  task :ensure_ssh_agent => [:ensure_node_vm] do
+    sh "ssh-add #{@node_env.config.ssh.private_key_path}"
+  end
+
+  task :build => [:ensure_node_vm, :ensure_ssh_agent, 'install:acts'] do
+  end
+end
+
+namespace :install do
+  ACTS = {:actstore => 'actstore', :booth => 'booth', :postgres_tamer => 'postgres', :nginx_tamer => 'nginx'}
+ 
+  task :use_source do
+    require 'dev_fileserver'
+    
+    DevFileserver.start
+    
+    ENV['ALT_CIRCUS_DEB_REPO'] = 'http://192.168.11.1:7654/debian'
+    @act_root='http://192.168.11.1:7654/acts'
+  end
+ 
+  task :ensure_targets do
+    @act_arch ||= ENV['ACT_ARCH'] || 'i386'
+    @act_root ||= ENV['ACT_ROOT'] || 'http://repo.deployacircus.com/acts'
+    @deploy_target ||= ENV['TARGET'] || 'ssh://vagrant@192.168.11.10'
+  end
+  
+  task :acts => [:ensure_targets] do
+    ACTS.each do |task_name, act_name|
+      sh "../circus/bin/circus deploy #{@deploy_target} #{act_name} #{@act_root}/current/#{act_name}-#{@act_arch}.act"
+    end
+  end
+end
+
+namespace :dev do
+  task :update_clown => ['install:use_source', 'node:ensure_node_vm'] do
+    execute_ssh(@node_env, "sudo rm -rf /usr/lib/clown/lib")
+    execute_ssh(@node_env, "sudo apt-get remove clown --purge -y --force-yes")
+    execute_ssh(@node_env, "sudo apt-get update")
+    execute_ssh(@node_env, "sudo apt-get install clown -y --force-yes")
+  end
+
+  def execute_ssh(env, command, vm_id = :default)
+    env.vms[vm_id].ssh.execute do |ssh|
+      ssh.exec!(command) do |channel, data, stream|
+        print stream
+      end
+    end
+  end
+end

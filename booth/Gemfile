@@ -1,0 +1,4 @@
+source :gemcutter
+path '../circus'
+
+gem "circus-deployment"

@@ -1,0 +1,8 @@
+deb http://mirror.lshift.net/ubuntu lucid main restricted
+deb http://mirror.lshift.net/ubuntu lucid-updates main restricted
+deb http://mirror.lshift.net/ubuntu lucid universe
+deb http://mirror.lshift.net/ubuntu lucid-updates universe
+deb http://mirror.lshift.net/ubuntu lucid multiverse
+deb http://mirror.lshift.net/ubuntu lucid-updates multiverse
+deb http://mirror.lshift.net/ubuntu lucid-backports universe
+deb http://security.ubuntu.com/ubuntu lucid-security main restricted universe multiverse

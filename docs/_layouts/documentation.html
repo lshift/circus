@@ -1,0 +1,20 @@
+{% include header.html %}
+    <div class="grid_3 alpha sidebar">
+      <div class="block">
+        <ol>
+          <li><a href="/docs/index.html">Overview</a></li>
+          <li><a href="/docs/architecture.html">Architecture</a></li>
+          <li><a href="/docs/management.html">Management</a></li>
+          <li>
+            <a href="/docs/extending.html">Developing/Extending Circus</a>
+            <ul>
+              <li><a href="/docs/extending/profiles.html">Application Profiles</a></li>
+            </ul>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <div class="grid_9 omega guide">
+      {{ content }}
+    </div>
+{% include footer.html %}
