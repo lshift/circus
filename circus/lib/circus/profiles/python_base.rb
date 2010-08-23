@@ -10,11 +10,11 @@ module Circus
 
       def prepare_for_deploy(logger, overlay_dir)
         # Build the virtualenv
-        if has_depsfile?
-          unless File.exists? "#{@dir}/vendor"
-            return false unless run_external(logger, "Create virtualenv", "cd #{@dir}; virtualenv --no-site-packages vendor")
-          end
+        unless File.exists? "#{@dir}/vendor"
+          return false unless run_external(logger, "Create virtualenv", "cd #{@dir}; virtualenv --no-site-packages vendor")
+        end
 
+        if has_depsfile?
           File.read(depsfile_fn).lines.each do |dep|
             return false unless run_external(logger, "Install dep #{dep}", 
                 "cd #{@dir}; vendor/bin/easy_install -q \"#{dep.strip}\"")
