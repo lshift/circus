@@ -20,7 +20,7 @@ module Clown
              
               # useradd won't create parent directories - ensure they are in place
               FileUtils.mkdir_p(File.dirname(profile_dir))
-              res = `useradd -d #{profile_dir} -m #{u}`
+              res = `useradd -d #{profile_dir} -m #{u} 2>&1`
               if $? != 0
                 @logger.error("Failed to create user profile for #{u}: #{res}")
               end

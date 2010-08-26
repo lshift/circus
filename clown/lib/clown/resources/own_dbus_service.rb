@@ -40,6 +40,11 @@ module Clown
             File.open(File.join(@config.dbus_system_path, "#{service_name}.conf"), 'w') do |f|
               f.write(service_file)
             end
+
+            res = `reload dbus`
+            if $? != 0
+              @logger.error("Failed to request dbus configuration reload: #{res}")
+            end
           end
         end
       end
