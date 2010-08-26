@@ -49,7 +49,7 @@ namespace :install do
     @scp.upload!('../servers/common/cookbooks', '/tmp/circus-install/common-cookbooks', :recursive => true)
     @scp.upload!('../fasttrack/cookbooks', '/tmp/circus-install/fasttrack-cookbooks', :recursive => true)
 
-    log_remote_cmd(@ssh, 'apt-get install -y rubygems ohai chef')
+    log_remote_cmd(@ssh, 'which chef-solo >/dev/null 2>/dev/null || apt-get install -y rubygems ohai chef')
     log_remote_cmd(@ssh, 'cd /tmp/circus-install; chef-solo -c config/solo.rb -j config/dna.json')
 
     # Copy up all necessary files to bootstrap a clown

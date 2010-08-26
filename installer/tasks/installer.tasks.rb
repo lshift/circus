@@ -11,9 +11,19 @@ namespace :install do
   end
  
   task :ensure_targets do
-    @act_arch ||= ENV['ACT_ARCH'] || 'i386'
-    @act_root ||= ENV['ACT_ROOT'] || 'http://repo.deployacircus.com/acts'
+    @act_arch ||= ENV['ACT_ARCH'] || determine_arch
+    @act_root ||= ENV['ACT_ROOT'] || 'http://repo.deployacircus.com/acts/current'
     fail "@deploy_target must have been set before using these .tasks" unless @deploy_target
+  end
+
+  def determine_arch
+    opts = {:port => @uri.port || 22}
+    @ssh = Net::SSH.start(@uri.host, @current_user, opts)
+
+    case @ssh.exec!("uname -m").strip
+      when "x86_64" then "x64"
+      else "i386"
+    end
   end
   
   task :acts => [:ensure_targets] do
