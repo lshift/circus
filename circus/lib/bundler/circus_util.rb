@@ -1,8 +1,7 @@
-require 'bundler'
-
 module Bundler
   class CircusUtil
     def self.fix_external_paths(dir)
+      require 'bundler'
       ENV['BUNDLE_GEMFILE'] = File.join(dir, 'Gemfile')
       
       # Correct any path based components in the Gemfile
