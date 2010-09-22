@@ -29,6 +29,16 @@ module Circus
     # Instructs the application to startup in place and activate all of its associated
     # acts.
     def go!(logger)
+      # Ensure that we have svscan available. If we don't, die nice and early
+      `which svscan`
+      if $? != 0
+        logger.error 'The svscan utility (usually provided by daemontools) is not available. ' +
+          ' This utility must be installed before the circus go command can function.'
+        # TODO: Detect OS and suggest installation mechanism?
+          
+        return
+      end
+      
       load! unless @acts
       
       FileUtils.rm_rf(private_run_root)
@@ -40,6 +50,10 @@ module Circus
       end
       logger.info "---------------------"
       
+      # If we've loaded bundler ourselves, then we need to remove its environment variables; otherwise,
+      # it will screw up child applications!
+      ENV['BUNDLE_GEMFILE'] = nil
+      ENV['BUNDLE_BIN_PATH'] = nil
       system("svscan #{private_run_root}")
     end
     
