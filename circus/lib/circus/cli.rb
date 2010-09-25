@@ -27,6 +27,18 @@ module Circus
       @app.go!(LOGGER)
     end
     
+    desc "pause ACT_NAME", "Temporarily halts an act that is running in development (via go)"
+    def pause(act_name)
+      load!
+      @app.pause(LOGGER, act_name)
+    end
+    
+    desc "resume ACT_NAME", "Resumes a paused act that is running in development (via go)"
+    def resume(act_name)
+      load!
+      @app.resume(LOGGER, act_name)
+    end
+    
     desc "assemble", "Assemble the application's acts for deployment"
     method_option :output, :default => '.circus/acts/', :desc => 'Destination directory for generated acts'
     method_option :actstore, :desc => 'URL of the act store to upload the built acts to'

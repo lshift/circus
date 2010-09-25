@@ -70,5 +70,19 @@ module Circus
     def act_file
       File.join(@dir, 'act.yaml')
     end
+    
+    def pause(logger, run_root)
+      working_dir = File.join(run_root, name)
+      process_mgmt = Circus::Processes::Daemontools.new
+      
+      process_mgmt.pause_service(name, working_dir, logger)
+    end
+    
+    def resume(logger, run_root)
+      working_dir = File.join(run_root, name)
+      process_mgmt = Circus::Processes::Daemontools.new
+      
+      process_mgmt.resume_service(name, working_dir, logger)
+    end
   end
 end

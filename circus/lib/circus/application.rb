@@ -57,6 +57,32 @@ module Circus
       system("svscan #{private_run_root}")
     end
     
+    # Instructs the application to stop the given act that is running under development via go.
+    def pause(logger, act_name)
+      load! unless @acts
+      
+      target_act = acts.find { |a| a.name == act_name }
+      unless target_act
+        logger.error "Act #{act_name} could not be found"
+        return
+      end
+      
+      target_act.pause(logger, private_run_root)
+    end
+    
+    # Instructs the application to resume the given act that is running under development via go.
+    def resume(logger, act_name)
+      load! unless @acts
+      
+      target_act = acts.find { |a| a.name == act_name }
+      unless target_act
+        logger.error "Act #{act_name} could not be found"
+        return
+      end
+      
+      target_act.resume(logger, private_run_root)
+    end
+    
     # Instructs the application to assemble it's components for deployment and generate
     # act output files.
     def assemble!(output_dir, logger, dev = false, only_acts = nil)
