@@ -29,9 +29,6 @@ if ! getent passwd circus >/dev/null; then
         	--no-create-home --gecos "Circus Clown agent" circus
 fi
 
-# activate all of the gems
-(cd /usr/lib/clown; bootstrap/bundler/bin/bundle install vendor)
-
 case "$1" in
     configure)
     ;;

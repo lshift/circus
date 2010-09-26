@@ -51,7 +51,7 @@ namespace :packaging do
       log_remote_cmd(ssh, "rm -rf /tmp/circus-pkg; mkdir /tmp/circus-pkg")
       scp.upload!('circus', '/tmp/circus-pkg', :recursive => true)
 
-      log_remote_cmd(ssh, 'cd /tmp/circus-pkg/circus; rake package')
+      log_remote_cmd(ssh, 'cd /tmp/circus-pkg/circus; rm -rf /tmp/circus-pkg/circus/pkg; rake package')
       mkdir_p 'packages/gems'
       scp.download!('/tmp/circus-pkg/circus/pkg/*.gem', 'packages/gems')
     end

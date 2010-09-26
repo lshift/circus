@@ -1,7 +1,7 @@
 # Overridable properties
 VERSION=0.1
 BUILD=1
-BUNDLER_VERSION=0.9.24
+BUNDLER_VERSION=1.0.0
 
 # Fixed properties
 GEM_CACHE_DIR=~/.bundle/ruby/1.8/cache
@@ -22,7 +22,7 @@ $(BUNDLER_GEM_CACHE): | $(GEM_CACHE_DIR)
 	
 install: | $(BUNDLER_GEM_CACHE)
 	#ln -s /usr/lib/clown $(SERVICE_DIR)/clown
-	cp -r Gemfile run bin lib log vendor $(TARGET_DIR)
+	cp -r Gemfile Gemfile.lock run bin lib log vendor $(TARGET_DIR)
 	mkdir -p $(ETC_DIR)
 	cp config/* $(ETC_DIR)
 	mkdir -p $(DBUS_SYSTEM_CONFIG_DIR)
@@ -44,7 +44,7 @@ install: | $(BUNDLER_GEM_CACHE)
 	chmod ugo+x $(TARGET_DIR)/bootstrap/bundler/bin/*
 
 	# Cache all of the gems
-	(cd $(TARGET_DIR); (bootstrap/bundler/bin/bundle check || bootstrap/bundler/bin/bundle install) && bootstrap/bundler/bin/bundle package)
+	# (cd $(TARGET_DIR); bootstrap/bundler/bin/bundle install
 
 package-in-tmp:
 	rm -rf /tmp/clown-build
@@ -57,17 +57,20 @@ package-in-tmp:
 	(cd build; dpkg-scanpackages . /dev/null | gzip -c9 > Packages.gz)
 
 package:
-	(bundle check || bundle install)
+	bundle install
 	rm -rf vendor
-	ruby -rrubygems -r'../circus/lib/bundler/circus_util' -e 'Bundler::CircusUtil.fix_external_paths(".")'
-	
+	ruby '../circus/lib/bundler/gem_cacher.rb'
+	rm -rf Gemfile.lock
+	bundle install --quiet
+
+	rm -rf build/
 	mkdir -p $(PKG_BUILD_DIR)
 	cp -r debian $(PKG_BUILD_DIR)
 	mv $(PKG_BUILD_DIR)/debian/run $(PKG_BUILD_DIR)/debian/log $(PKG_BUILD_DIR)
 	mv $(PKG_BUILD_DIR)/debian/com.deployacircus.Clown.conf $(PKG_BUILD_DIR)
 	mv $(PKG_BUILD_DIR)/debian/com.deployacircus.Clown.service $(PKG_BUILD_DIR)
 	mkdir -p $(PKG_BUILD_DIR)/usr/lib/clown/
-	cp -r Makefile Gemfile bin config lib vendor $(PKG_BUILD_DIR)
+	cp -r Makefile Gemfile Gemfile.lock bin config lib vendor $(PKG_BUILD_DIR)
 	
 	cd $(PKG_BUILD_DIR); dpkg-buildpackage -rfakeroot -us -uc
 	rm -rf $(PKG_BUILD_DIR)

@@ -1,4 +1,3 @@
 source :gemcutter
-path '../circus'
 
-gem "circus-deployment"
+gem "circus-deployment", :path => '../circus'

@@ -5,21 +5,30 @@ require 'bundler/circus_util'
 module Circus
   module Profiles
     class RubyBase < Base
-      BUNDLER_TOOL=File.expand_path('../../../bundler/circus_bundler.rb', __FILE__)
+      BUNDLER_TOOL=File.expand_path('../../../bundler/gem_cacher.rb', __FILE__)
       
       def initialize(name, dir, props)
         super(name, dir, props)
       end
 
-      # No dev preparation required. Don't override dev_run_script_content, since it is the
+      # Do basic gemfile preparation for dev. Don't override dev_run_script_content, since it is the
       # same as the deployment variant.
-      def prepare_for_dev(logger, run_dir); true; end
+      def prepare_for_dev(logger, run_dir)
+        if has_gemfile?
+            # TODO: Correct behaviour if working in the presence of an existing bundler environment
+          run_external(logger, 'gem installation', "cd #{@dir}; bundle check || bundle install")
+        end
+        
+        true
+      end
 
       def prepare_for_deploy(logger, overlay_dir)
         # Run the gem bundler if necessary
         if has_gemfile?
           logger.info("Bundling gems")
-          run_external(logger, 'gem bundling', "cd #{@dir}; ruby #{BUNDLER_TOOL}")
+          return false unless run_external(logger, 'gem installation', "cd #{@dir}; bundle install")
+          return false unless run_external(logger, 'gem caching', 
+              "cd #{@dir}; ruby #{BUNDLER_TOOL} && rm Gemfile.lock && bundle install vendor/bundle")
         end
         
         true

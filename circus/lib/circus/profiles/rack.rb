@@ -35,16 +35,8 @@ module Circus
       def deploy_run_script_content
         shell_run_script do
           <<-EOT
-          exec bundle exec vendor/bin/thin -R #{@rackup_name} -p #{listen_port} start
+          exec bundle exec thin -R #{@rackup_name} -p #{listen_port} start
           EOT
-        end
-      end
-      
-      def extra_dirs
-        if has_gemfile?
-          ["#{@dir}/.bundle"]
-        else
-          []
         end
       end
       

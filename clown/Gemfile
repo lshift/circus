@@ -1,5 +1,4 @@
-source :gemcutter
-path '../circus'
+source "http://rubygems.org"
 
-gem "circus-deployment"
-gem "json", ">= 1.4.2"
+gem "circus-deployment", :path => '../circus'
+gem "json_pure", ">= 1.4.6"

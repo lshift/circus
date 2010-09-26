@@ -17,11 +17,11 @@ module Clown
         cleanup_working_dir(name, logger)
       end
 
-      download_act(name, url, logger)
-      download_config(name, config_url, logger) unless config_url.empty?
-      prepare_working_dir(name, !config_url.empty?, logger)
-      activate_image(name, logger)
-      await_service_startup(name, logger)
+      return unless download_act(name, url, logger)
+      return unless download_config(name, config_url, logger) unless config_url.empty?
+      return unless prepare_working_dir(name, !config_url.empty?, logger)
+      return unless activate_image(name, logger)
+      return unless await_service_startup(name, logger)
       
       logger.info("Done")
     end
@@ -29,8 +29,8 @@ module Clown
     def undeploy(name, logger)
       logger.info("Executing package undeploy of: #{name}")
       
-      deactivate_image(name, logger)
-      cleanup_working_dir(name, logger)
+      return unless deactivate_image(name, logger)
+      return unless cleanup_working_dir(name, logger)
       
       logger.info("Done")
     end
@@ -79,6 +79,8 @@ module Clown
               f.write(content)
             end
         end
+        
+        true
       end
       
       def download_config(name, config_url, logger)
@@ -93,6 +95,8 @@ module Clown
           content = Net::HTTP.get(URI.parse(config_url))
           f.write(content)
         end
+        
+        true
       end
       
       def prepare_working_dir(name, apply_config, logger)
@@ -107,12 +111,13 @@ module Clown
         # Phase 1
         logger.info("Preparing First Phase Scripts")
         write_script(working_dir, 'mount_app', format_mount_script(name, image_file, working_dir))
+        write_script(working_dir, 'cleanup', format_cleanup_script(name, working_dir))
 
         logger.info("Mounting Image")
         result = `#{working_dir}/mount_app 2>&1`
         if $? != 0
           logger.error("Failed to execute mount image\n" + result)
-          return
+          return false
         end
         
         # Prepare config
@@ -127,7 +132,7 @@ module Clown
             result = `tar -xzf #{config_src} -C #{config_dir}`
             if $? != 0
               logger.error("Failed to unpack configuration archive\n" + result)
-              return
+              return false
             end
           else
             # Assume that we've just got a raw yaml file
@@ -141,7 +146,8 @@ module Clown
         write_script(working_dir, 'with_env', format_env_script(name, working_dir, env))
         write_script(working_dir, 'run', format_run_script(name, working_dir, env))
         write_script(log_working_dir, 'run', format_log_run_script(env))
-        write_script(working_dir, 'cleanup', format_cleanup_script(name, working_dir))
+        
+        true
       end
           
       def cleanup_working_dir(name, logger)
@@ -153,7 +159,7 @@ module Clown
           result = `#{cleanup_f} 2>&1`
           if $? != 0
             logger.error("Failed to execute cleanup script\n" + result)
-            return
+            return false
           end
         end
         
@@ -162,6 +168,8 @@ module Clown
           logger.info("Removing Working Directory")
           FileUtils.rm_rf(working_dir)
         end
+        
+        true
       end
       
       def activate_image(name, logger)
@@ -172,6 +180,8 @@ module Clown
         
         # Symlink the image into the /etc/services directory so that svscan will find it
         FileUtils.ln_s(working_target_dir, service_link, :force => true)
+        
+        true
       end
       
       def deactivate_image(name, logger)
@@ -201,6 +211,8 @@ module Clown
             logger.error("Service logger did not shutdown")
           end
         end
+        
+        true
       end
       
       def await_service_startup(name, logger)
@@ -353,7 +365,7 @@ module Clown
             
             set -e
             
-            [ -f #{act_run_script} ] && umount #{act_dir}
+            [ ! -f #{act_run_script} ] || umount #{act_dir}
           EOT
           cleanup_template(template)
         end
