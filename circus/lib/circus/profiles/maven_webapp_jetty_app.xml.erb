@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure.dtd">
+<Configure id="Server" class="org.eclipse.jetty.server.Server">
+  <New class="org.eclipse.jetty.webapp.WebAppContext">
+    <Arg><Ref id="Contexts"/></Arg>
+    <Arg><%= @name %></Arg>
+    <Arg>/</Arg>
+    
+    <Set name="ConfigurationClasses">
+      <Array type="java.lang.String">
+        <Item>org.eclipse.jetty.webapp.WebInfConfiguration</Item>
+        <Item>org.eclipse.jetty.webapp.WebXmlConfiguration</Item>
+        <Item>org.eclipse.jetty.webapp.MetaInfConfiguration</Item>
+        <Item>org.eclipse.jetty.webapp.FragmentConfiguration</Item>
+        <Item>org.eclipse.jetty.plus.webapp.EnvConfiguration</Item>
+        <Item>org.eclipse.jetty.plus.webapp.Configuration</Item>
+        <Item>org.eclipse.jetty.webapp.JettyWebXmlConfiguration</Item>
+        <Item>org.eclipse.jetty.webapp.TagLibConfiguration</Item>
+      </Array>
+    </Set>
+    
+    <% amqp_connection_factories.each do |cf| %>
+      <New class="org.eclipse.jetty.plus.jndi.Resource">
+        <Arg></Arg>
+        <Arg><%= cf['name'] %></Arg>
+        <Arg>
+          <New class="com.rabbitmq.client.ConnectionFactory">
+            <Set name="host"><%= cf['host'] %></Set>
+          </New>
+        </Arg>
+      </New>
+    <% end %>
+    
+    <% datasources.each do |ds| %>
+      <New class="org.eclipse.jetty.plus.jndi.Resource">
+        <Arg></Arg>
+        <Arg><%= ds['name'] %></Arg>
+        <Arg>
+          <New class="org.apache.commons.dbcp.BasicDataSource">
+            <Set name="driverClassName">org.apache.derby.jdbc.EmbeddedDriver</Set>
+            <Set name="url">jdbc:derby:/tmp/<%= ds['name'] %>;create=true</Set>
+          </New>
+        </Arg>
+      </New>
+    <% end %>
+
+    <% env_entries.each do |ee| %>
+      <New class="org.eclipse.jetty.plus.jndi.EnvEntry">
+        <Arg></Arg>
+        <Arg><%= ee['name'] %></Arg>
+        <Arg type="<%= ee['type'] %>"><%= ee['value']%></Arg>
+        <Arg type="boolean">true</Arg>
+      </New>
+    <% end %>
+  </New>
+</Configure>

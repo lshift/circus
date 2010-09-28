@@ -3,7 +3,7 @@ require 'yaml'
 
 module Circus
   class Act
-    attr_reader :name, :dir, :props, :profile
+    attr_reader :name, :dir, :props
     
     def initialize(name, dir, props = {})
       @name = name
@@ -15,6 +15,12 @@ module Circus
         act_cfg = YAML.load(File.read(act_file))
         @props.merge! act_cfg
       end
+    end
+    
+    def profile
+      detect! unless @profile
+      
+      @profile
     end
     
     def should_package?

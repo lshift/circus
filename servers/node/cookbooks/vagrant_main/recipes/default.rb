@@ -13,3 +13,9 @@ require_recipe 'python'
 
 # Support for being a postgres server
 require_recipe 'postgresql::server'
+
+# Support for Java webapps
+require_recipe 'jetty'
+
+# Support for Rabbit consuming apps
+require_recipe 'rabbitmq'

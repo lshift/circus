@@ -1,4 +1,4 @@
 source "http://rubygems.org"
 
 gem "circus-deployment", :path => '../circus'
-gem "json_pure", ">= 1.4.6"
+gem "json_pure", "~> 1.4.6"

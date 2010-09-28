@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: apt
-# Recipe:: default
+# Recipe:: cacher
 #
 # Copyright 2008-2009, Opscode, Inc.
 #
@@ -16,18 +16,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-e = execute "apt-get update" do
-  action :nothing
+package "apt-cacher" do
+  action :install
 end
 
-e.run_action(:run)
+service "apt-cacher" do
+  supports :restart => true, :status => false
+  action [ :enable, :start ]
+end
 
-%w{/var/cache/local /var/cache/local/preseeding}.each do |dirname|
-  directory dirname do
-    owner "root"
-    group "root"
-    mode  0755
-    action :create
-  end
+cookbook_file "/etc/apt-cacher/apt-cacher.conf" do
+  source "apt-cacher.conf"
+  owner "root"
+  group "root"
+  mode 0644
+  notifies :restart, resources(:service => "apt-cacher")
+end
+
+cookbook_file "/etc/default/apt-cacher" do
+  source "apt-cacher"
+  owner "root"
+  group "root"
+  mode 0644
+  notifies :restart, resources(:service => "apt-cacher")
 end

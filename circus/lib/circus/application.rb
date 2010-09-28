@@ -40,15 +40,15 @@ module Circus
       end
       
       load! unless @acts
-      
-      FileUtils.rm_rf(private_run_root)
-      acts.each do |act|
-        act.package_for_dev(logger, private_run_root)
-      end
+
       acts.each do |act|
         logger.info "Starting act #{act.name} at #{act.dir} using profile #{act.profile.name}"
       end
       logger.info "---------------------"
+      FileUtils.rm_rf(private_run_root)
+      acts.each do |act|
+        return unless act.package_for_dev(logger, private_run_root)
+      end
       
       # If we've loaded bundler ourselves, then we need to remove its environment variables; otherwise,
       # it will screw up child applications!
@@ -98,6 +98,8 @@ module Circus
       
       assembly_acts = acts.select {|a| only_acts.nil? or only_acts.include? a.name }
       
+      FileUtils.rm_rf(output_dir)
+      FileUtils.rm_rf(private_overlay_root)
       FileUtils.mkdir_p(output_dir)
       assembly_acts.each do |act|
         act.detect!
