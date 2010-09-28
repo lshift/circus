@@ -77,7 +77,7 @@ module Circus
       
       private
         def listen_port
-          @props['web-app-port'] || 6000
+          @props['web-app-port'] || 8130
         end
         
         def amqp_connection_factories
