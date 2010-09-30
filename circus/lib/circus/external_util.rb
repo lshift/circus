@@ -10,5 +10,15 @@ module Circus
         true
       end
     end
+    
+    def self.run_and_show_external(logger, desc, cmd)
+      IO.popen("#{cmd} 2>&1", 'r') do |pipe|
+        while (line = pipe.gets)
+          logger.info(line)
+        end
+      end
+      
+      true
+    end
   end
 end

@@ -1,0 +1,5 @@
+# Stack Script for setting up a Ruby application host.
+
+run_list:
+- recipe[ruby]
+- recipe[bundler]

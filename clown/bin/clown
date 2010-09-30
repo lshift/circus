@@ -8,6 +8,9 @@ require "bundler"
 current_path = ENV['PATH']
 Bundler.setup
 ENV['PATH'] = current_path
+ENV.delete 'RUBY_OPT'
+ENV.delete 'BUNDLE_BIN_PATH'
+ENV.delete 'BUNDLE_GEMFILE'
 
 $: << File.expand_path(File.dirname(__FILE__) + "/../lib")
 $: << File.expand_path(File.dirname(__FILE__) + "/../vendor/gems/circus/lib")

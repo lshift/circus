@@ -1,0 +1,4 @@
+# Stack Script for setting up a Java Web Host.
+
+run_list:
+- recipe[jetty]

@@ -14,6 +14,10 @@ module Circus
         @props = props
       end
       
+      def mark_for_persistent_run?
+        true
+      end
+      
       def package_base_dir?
         true
       end
@@ -34,8 +38,10 @@ module Circus
         write_run_script(run_dir) do |f|
           f.write(deploy_run_script_content.strip)
         end
+        
+        reqs = build_default_requirements.merge(requirements)
         File.open(File.join(run_dir, 'requirements.yaml'), 'w') do |f|
-          f.write(requirements.to_yaml)
+          f.write(reqs.to_yaml)
         end
       end
       
@@ -109,6 +115,13 @@ module Circus
         
         def run_external(logger, desc, cmd)
           ExternalUtil.run_external(logger, desc, cmd)
+        end
+        
+      private
+        def build_default_requirements
+          {
+            'persistent-run' => mark_for_persistent_run?
+          }
         end
     end
   end

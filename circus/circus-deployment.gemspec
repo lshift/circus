@@ -26,4 +26,5 @@ Gem::Specification.new do |s|
   s.add_dependency('uuid', ['2.0.1'])
   s.add_dependency('net-ssh', ['2.0.22'])
   s.add_dependency('net-scp', ['1.0.2'])
+  s.add_dependency('json_pure', ['1.4.6'])
 end

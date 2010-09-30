@@ -1,0 +1,4 @@
+# Stack Script for setting up a Python App Host.
+
+run_list:
+- recipe[python]

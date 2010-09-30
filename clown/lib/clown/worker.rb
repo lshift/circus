@@ -1,6 +1,7 @@
 require 'net/http'
 require 'fileutils'
 require 'yaml'
+require 'circus/external_util'
 
 module Clown
   class Worker
@@ -19,9 +20,13 @@ module Clown
 
       return unless download_act(name, url, logger)
       return unless download_config(name, config_url, logger) unless config_url.empty?
-      return unless prepare_working_dir(name, !config_url.empty?, logger)
-      return unless activate_image(name, logger)
-      return unless await_service_startup(name, logger)
+      return unless env = prepare_working_dir(name, !config_url.empty?, logger)
+      if env[:persistent_run]
+        return unless activate_image(name, logger)
+        return unless await_service_startup(name, logger)
+      else
+        run_application(name, logger)
+      end
       
       logger.info("Done")
     end
@@ -147,7 +152,7 @@ module Clown
         write_script(working_dir, 'run', format_run_script(name, working_dir, env))
         write_script(log_working_dir, 'run', format_log_run_script(env))
         
-        true
+        env
       end
           
       def cleanup_working_dir(name, logger)
@@ -250,6 +255,11 @@ module Clown
         end
         
         return false
+      end
+      
+      def run_application(name, logger)
+        working_dir = mk_working_dir(name)
+        Circus::ExternalUtil.run_and_show_external(logger, 'Execute one-off application', "cd #{working_dir}; ./run")
       end
             
       def mk_image_file(name)
@@ -390,7 +400,8 @@ module Clown
             :user => @config.run_user,  # The user to run the act under
             :working_dir => working_dir, # The working dir being used (read-only for resources) 
             :props => {},               # System properties to run with
-            :setup_cmds => []           # Commands to run when setting up env
+            :setup_cmds => [],          # Commands to run when setting up env
+            :persistent_run => false,   # Whether the application needs to be made runnable persistently, or just executed once
           }
           if File.exists?(requirements_fn)
             resource_data = YAML.load(File.read(requirements_fn))
