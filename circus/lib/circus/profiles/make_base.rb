@@ -10,7 +10,10 @@ module Circus
 
       def prepare_for_deploy(logger, overlay_dir)
         # Build the application
-        run_external(logger, 'Compile application', "cd #{@dir}; make")
+        if File.exists?(File.join(@dir, 'Makefile'))
+          logger.info("Compiling #{@name}")
+          run_external(logger, 'Compile application', "cd #{@dir}; make")
+        end
       end
     end
   end
