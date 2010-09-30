@@ -1,4 +1,9 @@
 #!/bin/sh
 
+# Ensure the PATH is available
+. /etc/environment
+export PATH
+
+
 cd /usr/lib/clown
 exec ruby bin/clown -c /etc/clown/clown.config 2>&1

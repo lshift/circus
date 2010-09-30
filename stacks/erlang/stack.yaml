@@ -1,0 +1,4 @@
+# Stack Script for setting up an Erlang application host.
+
+run_list:
+- recipe[erlang]

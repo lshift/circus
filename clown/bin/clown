@@ -8,7 +8,7 @@ require "bundler"
 current_path = ENV['PATH']
 Bundler.setup
 ENV['PATH'] = current_path
-ENV.delete 'RUBY_OPT'
+ENV.delete 'RUBYOPT'
 ENV.delete 'BUNDLE_BIN_PATH'
 ENV.delete 'BUNDLE_GEMFILE'
 
