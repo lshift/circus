@@ -37,8 +37,8 @@
         <Arg><%= ds['name'] %></Arg>
         <Arg>
           <New class="org.apache.commons.dbcp.BasicDataSource">
-            <Set name="driverClassName">org.apache.derby.jdbc.EmbeddedDriver</Set>
-            <Set name="url">jdbc:derby:/tmp/<%= ds['name'] %>;create=true</Set>
+            <Set name="driverClassName">org.postgresql.Driver</Set>
+            <Set name="url">jdbc:postgresql://localhost/<%= ds['db_name'] %>?user=<%= ds['db_user'] %>&amp;password=<%= ds['db_password'] %></Set>
           </New>
         </Arg>
       </New>

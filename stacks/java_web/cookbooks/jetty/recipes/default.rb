@@ -42,3 +42,7 @@ remote_file "/opt/jetty-7.1/lib/jndi/derby-10.4.2.0.jar" do
   source "http://repo1.maven.org/maven2/org/apache/derby/derby/10.4.2.0/derby-10.4.2.0.jar"
   action :create_if_missing
 end
+remote_file "/opt/jetty-7.1/lib/jndi/postgresql-8.4-701.jdbc4.jar" do
+  source "http://mirrors.ibiblio.org/pub/mirrors/maven2/postgresql/postgresql/8.4-701.jdbc4/postgresql-8.4-701.jdbc4.jar"
+  action :create_if_missing
+end
