@@ -110,6 +110,13 @@ module Circus
       client.exec(target, act_name, cmd).result
     end
     
+    desc "reset TARGET ACT", "Restarts the given act on the target host"
+    def reset(target, act_name)
+      connection = ConnectionBuilder.new(options).build(target)
+      client = ClownClient.new(connection, LOGGER)
+      client.reset(target, act_name).result
+    end
+    
     desc "deploy TARGET NAME ACT", "Deploy the named object using the given act onto the given target server"
     method_option :config, :desc => 'URL of configuration object to use at deployment'
     # method_option :actstore, :required => true, :desc => 'The store to retrieve the act from'

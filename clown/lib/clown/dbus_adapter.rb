@@ -19,12 +19,21 @@ module Clown
       
       dbus_method :deploy, "in id:s, in name:s, in url:s, in config_url:s" do |id, name, url, config_url|
         logger = Circus::Agents::DBusLogger.new(self, id)
-        @worker.deploy(name, url, config_url, logger)
+        begin
+          @worker.deploy(name, url, config_url, logger)
+        rescue
+          @logger.error("Deployment failed - #{$!}")
+        end
       end
       
       dbus_method :undeploy, "in id:s, in name:s" do |id, name|
         logger = Circus::Agents::DBusLogger.new(self, id)
         @worker.undeploy(name, logger)
+      end
+      
+      dbus_method :reset, "in id:s, in name:s" do |id, name|
+        logger = Circus::Agents::DBusLogger.new(self, id)
+        @worker.reset(name, logger)
       end
             
       dbus_method :configure, "in id:s, in name:s, in config_url:s" do |id, name, config_url|

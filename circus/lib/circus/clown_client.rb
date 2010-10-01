@@ -23,5 +23,9 @@ module Circus
     def exec(node, name, cmd)
       @connection.call(node, 'Clown', 'Clown', 'exec', {'name' => name, 'command' => cmd}, @logger)
     end
+    
+    def reset(node, name)
+      @connection.call(node, 'Clown', 'Clown', 'reset', {'name' => name}, @logger)
+    end
   end
 end

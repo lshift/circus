@@ -49,8 +49,15 @@ module Clown
         return false
       end
 
-      logger.info(`#{working_dir}/with_env #{command}`)
-      return $? == 0
+      Circus::ExternalUtil.run_and_show_external(logger, 'Requested command', `#{working_dir}/with_env #{command}`)
+    end
+    
+    def reset(name, logger)
+      logger.info("Resetting Act #{name}")
+      deactivate_image(name, logger)
+      activate_image(name, logger)
+      
+      logger.info('Done')
     end
     
     def configure(name, config_url, logger)
@@ -327,7 +334,7 @@ module Clown
             #{working_dir}/mount_app
             
             # Set HOME so applications that require it work
-            export HOME=#{working_dir}
+            export HOME=#{env[:home_dir]}
 
             # Run setup commands
             export EXECUTE_USER=#{env[:user]}
@@ -398,6 +405,7 @@ module Clown
 
           env = {
             :user => @config.run_user,  # The user to run the act under
+            :home_dir    => working_dir, # Default the home directory to the (read-only) working directory. Custom execution users can change this.
             :working_dir => working_dir, # The working dir being used (read-only for resources) 
             :props => {},               # System properties to run with
             :setup_cmds => [],          # Commands to run when setting up env
