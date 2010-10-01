@@ -25,6 +25,8 @@ module Clown
                 @logger.error("Failed to create user profile for #{u}: #{res}")
               end
             end
+            
+            env[:home_dir] = profile_dir
           end
         end
       end
