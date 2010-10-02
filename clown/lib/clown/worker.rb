@@ -26,6 +26,7 @@ module Clown
         return unless await_service_startup(name, logger)
       else
         run_application(name, logger)
+        cleanup_working_dir(name, logger)
       end
       
       logger.info("Done")
