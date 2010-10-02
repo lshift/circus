@@ -3,19 +3,19 @@ require_recipe 'dev'
 require_recipe 'clown'
 
 # Support for booths
-require_recipe 'booth_support'
+# require_recipe 'booth_support'
 
 # Support for webapps
-require_recipe 'nginx'
+# require_recipe 'nginx'
 
 # Support for Python on nodes
-require_recipe 'python'
+# require_recipe 'python'
 
 # Support for being a postgres server
-require_recipe 'postgresql::server'
+# require_recipe 'postgresql::server'
 
 # Support for Java webapps
-require_recipe 'jetty'
+# require_recipe 'jetty'
 
 # Support for Rabbit consuming apps
-require_recipe 'rabbitmq'
+# require_recipe 'rabbitmq'

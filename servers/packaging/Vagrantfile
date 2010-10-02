@@ -1,23 +1,26 @@
 Vagrant::Config.run do |config|
   config.vm.define :packaging32 do |config32|
-    # This lucid box requires the following command to have been run:
-    #   vagrant box add lucid32v2 http://s3.lds.li/vagrant/lucid32v2.box
-    config32.vm.box = "lucid32v2"
+    config32.vm.box = "lucid32"
+    config32.vm.box_url = "http://files.vagrantup.com/lucid32.box"
+    config32.vm.base_mac = "0800278F7A9F"
+
     config32.vm.forward_port("ssh", 22, 22142)
-  
+    
     # Use Chef
     config32.vm.provisioner = :chef_solo 
   
     # Use both our server-specific cookbooks, and the common ones
     config32.chef.cookbooks_path = [File.expand_path('../cookbooks', __FILE__), File.expand_path('../../common/cookbooks', __FILE__)]
+    config32.chef.run_list = ["recipe[vagrant_main]"]
 
     config32.vm.share_folder("circus", '/circus', File.expand_path('../../..', __FILE__))
   end
   
   config.vm.define :packaging64 do |config64|
-    # This lucid box requires the following command to have been run:
-    #   vagrant box add lucid64v2 http://s3.lds.li/vagrant/lucid64v2.box
-    config64.vm.box = "lucid64v2"
+    config64.vm.box = "lucid64"
+    config64.vm.box_url = "http://files.vagrantup.com/lucid64.box"
+    config64.vm.base_mac = "0800271AB2AC"
+
     config64.vm.forward_port("ssh", 22, 22143)
   
     # Use Chef
@@ -25,6 +28,7 @@ Vagrant::Config.run do |config|
   
     # Use both our server-specific cookbooks, and the common ones
     config64.chef.cookbooks_path = [File.expand_path('../cookbooks', __FILE__), File.expand_path('../../common/cookbooks', __FILE__)]
+    config64.chef.run_list = ["recipe[vagrant_main]"]
 
     config64.vm.share_folder("circus", '/circus', File.expand_path('../../..', __FILE__))
   end

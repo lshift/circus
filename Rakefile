@@ -43,16 +43,19 @@ namespace :packaging do
   end
   
   task :ensure_packaging_env do
-    @packaging_env = Vagrant::Environment.load!(File.expand_path('../servers/packaging', __FILE__))
+    @packaging_env = Vagrant::Environment.new(:cwd => File.expand_path('../servers/packaging', __FILE__))
+    @packaging_env.ui = Vagrant::UI::Shell.new(@packaging_env, Thor::Base.shell.new)
+    @packaging_env.load!
+    # load!(File.expand_path('../servers/packaging', __FILE__))
   end
   
   desc "Ensures that the 32 bit packaging vm is available"
   task :ensure_packaging_vm32 => :ensure_packaging_env do
-    @packaging_env.commands.subcommand 'up', 'packaging32'
+    @packaging_env.cli('up', 'packaging32')
   end
 
   task :ensure_packaging_vm64 => :ensure_packaging_env do
-    @packaging_env.commands.subcommand 'up', 'packaging64'
+    @packaging_env.cli('up', 'packaging64')
   end
  
   task :circus_tools_gem => [:ensure_packaging_vm32] do
@@ -63,8 +66,9 @@ namespace :packaging do
       scp.upload!('circus', '/tmp/circus-pkg', :recursive => true)
 
       log_remote_cmd(ssh, 'cd /tmp/circus-pkg/circus; rm -rf /tmp/circus-pkg/circus/pkg; rake package')
+      gem_path = ssh.exec!('ls /tmp/circus-pkg/circus/pkg/circus-deployment-*.gem').strip
       mkdir_p 'packages/gems'
-      scp.download!('/tmp/circus-pkg/circus/pkg/*.gem', 'packages/gems')
+      scp.download!(gem_path, 'packages/gems')
     end
   end
 
@@ -152,8 +156,10 @@ end
 namespace :deployment do
   task :ensure_node_vm do
     # Load a Vagrant environment for deployment, and ensure that it is available
-    @node_env = Vagrant::Environment.load!(File.expand_path('../servers/node', __FILE__))
-    @node_env.commands.subcommand 'up'
+    @node_env = Vagrant::Environment.new(:cwd => File.expand_path('../servers/node', __FILE__))
+    @node_env.ui = Vagrant::UI::Shell.new(@node_env, Thor::Base.shell.new)
+    @node_env.load!
+    @node_env.cli('up')
   end
   task :ensure_ssh_agent => [:ensure_node_vm] do
     sh "ssh-add #{@node_env.config.ssh.private_key_path}"
@@ -162,7 +168,6 @@ namespace :deployment do
   task :clown => [:ensure_node_vm] do
     execute_ssh(@node_env, "sudo rm -rf /usr/lib/clown/lib")
     execute_ssh(@node_env, "sudo apt-get remove clown --purge -y --force-yes")
-    execute_ssh(@node_env, "(cd /packages/debs; dpkg-scanpackages . /dev/null | gzip -c9 > Packages.gz)")
     execute_ssh(@node_env, "sudo apt-get update")
     execute_ssh(@node_env, "sudo apt-get install clown -y --force-yes")
   end
@@ -172,15 +177,25 @@ namespace :deployment do
     sh "circus/bin/circus deploy ssh://vagrant@localhost:22144 actstore /tmp/actstore.act"
   end
   
-  [:booth, :postgres_tamer, :nginx_tamer].each do |act_name|
-    task act_name => [:ensure_node_vm, :ensure_ssh_agent] do
-      deploy_component act_name
+  task :ruby_stack => [:ensure_node_vm, :ensure_ssh_agent] do
+    @node_env.vms[:default].ssh.upload!('packages/acts/ruby_stack.act', '/tmp/ruby_stack.act')
+    sh "circus/bin/circus deploy ssh://vagrant@localhost:22144 ruby_stack /tmp/ruby_stack.act"
+  end
+  ALL_STACKS.reject { |n| n == :ruby }.each do |stack_name|
+    task "#{stack_name}_stack" => [:ensure_node_vm, :ensure_ssh_agent] do
+      deploy_component("#{stack_name}_stack", nil)
     end
   end
   
-  task :all_stacks => ALL_STACKS
-  task :all_app_acts => [:actstore, :booth, :postgres_tamer, :nginx_tamer]
-  task :all => [:clown, :all_app_acts, :all_stacks]
+  [:booth, :postgres_tamer, :nginx_tamer].each do |act_name|
+    task act_name => [:ensure_node_vm, :ensure_ssh_agent] do
+      deploy_component(act_name, 'i386')
+    end
+  end
+  
+  task :all_stacks => ALL_STACKS.reject{ |n| n == :ruby }.map { |n| "#{n}_stack" }
+  task :all_app_acts => [:booth, :postgres_tamer, :nginx_tamer]
+  task :all => [:clown, :ruby_stack, :actstore, :all_stacks, :all_app_acts]
 end
 
 namespace :development do
@@ -228,7 +243,9 @@ def package_component(env, dir_name, act_name, vm_id, arch = nil)
   end
 end
 
-def deploy_component(name)
-  sh "circus/bin/circus upload packages/acts/#{name}-i386.act --actstore http://192.168.11.5:9088/acts"
-  sh "circus/bin/circus deploy ssh://vagrant@localhost:22144 #{name} http://192.168.11.5:9088/acts/#{name}-i386.act"
+def deploy_component(name, arch)
+  suffix = if arch then "-#{arch}" else "" end
+  
+  sh "circus/bin/circus upload packages/acts/#{name}#{suffix}.act --actstore http://192.168.11.5:9088/acts"
+  sh "circus/bin/circus deploy ssh://vagrant@localhost:22144 #{name} http://192.168.11.5:9088/acts/#{name}#{suffix}.act"
 end
