@@ -31,20 +31,31 @@ namespace :docs do
 end
 task :docs => ['docs:generate']
 
+ALL_APP_ACTS = {
+  :actstore => 'actstore', :booth => 'booth', 
+  :postgres_tamer => 'tamers/postgres', :nginx_tamer => 'tamers/nginx'
+}
+ALL_STACKS = [:booth_support, :database, :erlang, :java_web, :python, :ruby, :static_web, :web]
+
 namespace :packaging do
   task :clean do
     rm_rf 'packages/'
   end
   
-  desc "Ensures that the packaging vm is available"
-  task :ensure_packaging_vm do
-    # Load a Vagrant environment for packaging, and ensure that it is available
+  task :ensure_packaging_env do
     @packaging_env = Vagrant::Environment.load!(File.expand_path('../servers/packaging', __FILE__))
+  end
+  
+  desc "Ensures that the 32 bit packaging vm is available"
+  task :ensure_packaging_vm32 => :ensure_packaging_env do
     @packaging_env.commands.subcommand 'up', 'packaging32'
+  end
+
+  task :ensure_packaging_vm64 => :ensure_packaging_env do
     @packaging_env.commands.subcommand 'up', 'packaging64'
   end
  
-  task :circus_tools_gem => [:ensure_packaging_vm] do
+  task :circus_tools_gem => [:ensure_packaging_vm32] do
     @packaging_env.vms[:packaging32].ssh.execute do |ssh|
       scp = Net::SCP.new(ssh.session)
 
@@ -67,15 +78,15 @@ namespace :packaging do
     end
   end
  
-  task :ensure_working_circus_tools => [:ensure_packaging_vm, :circus_tools_gem] do
+  task :ensure_working_circus_tools => [:ensure_packaging_vm32, :circus_tools_gem] do
     install_circus_tools(@packaging_env, :packaging32)
   end
   
-  task :ensure_working_circus_tools64 => [:ensure_packaging_vm] do
+  task :ensure_working_circus_tools64 => [:ensure_packaging_vm64] do
     install_circus_tools(@packaging_env, :packaging64)
   end
   
-  task :clown => [:ensure_packaging_vm] do
+  task :clown => [:ensure_packaging_vm32] do
     # Upload the Clown build files
     @packaging_env.vms[:packaging32].ssh.execute do |ssh|
       scp = Net::SCP.new(ssh.session)
@@ -97,7 +108,7 @@ namespace :packaging do
     end
   end
 
-  task :debian_repo => [:ensure_packaging_vm] do
+  task :debian_repo => [:ensure_packaging_vm32] do
     mkdir_p 'packages'
 
     # Execute the build of the clown
@@ -117,21 +128,25 @@ namespace :packaging do
     end
   end
   
-  {
-    :actstore => 'actstore', :booth => 'booth', 
-    :postgres_tamer => 'tamers/postgres', :nginx_tamer => 'tamers/nginx'
-  }.each do |task_name, act_dir|
-    task "#{task_name}" => [:ensure_packaging_vm, :ensure_working_circus_tools] do
-      package_component(@packaging_env, act_dir, :packaging32, 'i386')
+  ALL_APP_ACTS.each do |act_name, act_dir|
+    task "#{act_name}" => [:ensure_packaging_vm32, :ensure_working_circus_tools] do
+      package_component(@packaging_env, act_dir, act_name, :packaging32, 'i386')
     end
-    task "#{task_name}64" => [:ensure_packaging_vm, :ensure_working_circus_tools64] do
-      package_component(@packaging_env, act_dir, :packaging64, 'x64')
+    task "#{act_name}64" => [:ensure_packaging_vm64, :ensure_working_circus_tools64] do
+      package_component(@packaging_env, act_dir, act_name, :packaging64, 'x64')
+    end
+  end
+  
+  ALL_STACKS.each do |stack_name|
+    task "#{stack_name}_stack" => [:ensure_packaging_vm32, :ensure_working_circus_tools] do
+      package_component(@packaging_env, "stacks/#{stack_name}", "#{stack_name}_stack", :packaging32)
     end
   end
  
-  task :acts => [:actstore, :booth, :postgres_tamer, :nginx_tamer]
-  task :acts64 => [:actstore, :booth, :postgres_tamer, :nginx_tamer].map { |n| "#{n}64" } 
-  task :all => [:clown, :debian_repo, :acts, :acts64]
+  task :acts => ALL_APP_ACTS.keys
+  task :acts64 => ALL_APP_ACTS.keys.map { |n| "#{n}64" } 
+  task :stacks => ALL_STACKS.map { |n| "#{n}_stack" }
+  task :all => [:clown, :debian_repo, :acts, :acts64, :stacks]
 end
 
 namespace :deployment do
@@ -157,14 +172,15 @@ namespace :deployment do
     sh "circus/bin/circus deploy ssh://vagrant@localhost:22144 actstore /tmp/actstore.act"
   end
   
-  {:booth => 'booth', :postgres_tamer => 'postgres', :nginx_tamer => 'nginx'}.each do |task_name, act_name|
-    task task_name => [:ensure_node_vm, :ensure_ssh_agent] do
+  [:booth, :postgres_tamer, :nginx_tamer].each do |act_name|
+    task act_name => [:ensure_node_vm, :ensure_ssh_agent] do
       deploy_component act_name
     end
   end
   
-  task :all_acts => [:actstore, :booth, :postgres_tamer, :nginx_tamer]
-  task :all => [:clown, :all_acts]
+  task :all_stacks => ALL_STACKS
+  task :all_app_acts => [:actstore, :booth, :postgres_tamer, :nginx_tamer]
+  task :all => [:clown, :all_app_acts, :all_stacks]
 end
 
 namespace :development do
@@ -194,10 +210,10 @@ def execute_ssh(env, command, vm_id = :default)
   end
 end
 
-def package_component(env, dir_name, vm_id, suffix)
+def package_component(env, dir_name, act_name, vm_id, arch = nil)
   root_dir = dir_name.split('/').first
-  act_name = File.basename(dir_name)
  
+  suffix = if arch then "-#{arch}" else "" end
   env.vms[vm_id].ssh.execute do |ssh|
     scp = Net::SCP.new(ssh.session)
 
@@ -208,7 +224,7 @@ def package_component(env, dir_name, vm_id, suffix)
     log_remote_cmd(ssh, "cd /tmp/circus-pkg/#{dir_name} && circus assemble --output /tmp/packages/acts")
 
     mkdir_p 'packages/acts'
-    scp.download!("/tmp/packages/acts/#{act_name}.act", "packages/acts/#{act_name}-#{suffix}.act")
+    scp.download!("/tmp/packages/acts/#{act_name}.act", "packages/acts/#{act_name}#{suffix}.act")
   end
 end
 

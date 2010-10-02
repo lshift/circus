@@ -14,6 +14,9 @@ module Circus
       if File.exists? act_file
         act_cfg = YAML.load(File.read(act_file))
         @props.merge! act_cfg
+        
+        # Allow act name to be overriden
+        @name = @props['name'] if @props['name']
       end
     end
     

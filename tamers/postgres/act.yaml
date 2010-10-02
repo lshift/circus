@@ -1,4 +1,4 @@
-purerb-app: postgres_tamer.rb
+name: postgres_tamer
 requirements:
     execution-user: postgres
     own-dbus-service:

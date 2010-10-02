@@ -1,3 +1,4 @@
+name: nginx_tamer
 requirements:
     execution-user: root
     own-dbus-service:
