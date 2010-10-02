@@ -1,0 +1,8 @@
+#!/bin/sh
+# prerm script for clown
+#
+# see: dh_installdeb(1)
+set -e
+
+echo "Ensuring Clown is stopped"
+svc -ix /usr/lib/clown || true

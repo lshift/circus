@@ -30,7 +30,6 @@ case "$1" in
     ;;
 
     remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
-        svc -ix /usr/lib/clown || true
         rm -rf /usr/lib/clown || true
     ;;
 

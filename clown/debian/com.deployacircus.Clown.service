@@ -1,4 +1,4 @@
 [D-BUS Service]
 Name=com.deployacircus.Clown
-Exec=/usr/bin/supervise /usr/lib/clown
+Exec=/usr/lib/clown/run_with_supervise
 User=root

@@ -22,7 +22,7 @@ $(BUNDLER_GEM_CACHE): | $(GEM_CACHE_DIR)
 	
 install: | $(BUNDLER_GEM_CACHE)
 	#ln -s /usr/lib/clown $(SERVICE_DIR)/clown
-	cp -r Gemfile Gemfile.lock run bin lib log vendor $(TARGET_DIR)
+	cp -r Gemfile Gemfile.lock run run_with_supervise bin lib log vendor $(TARGET_DIR)
 	mkdir -p $(ETC_DIR)
 	cp config/* $(ETC_DIR)
 	mkdir -p $(DBUS_SYSTEM_CONFIG_DIR)
@@ -66,7 +66,7 @@ package:
 	rm -rf build/
 	mkdir -p $(PKG_BUILD_DIR)
 	cp -r debian $(PKG_BUILD_DIR)
-	mv $(PKG_BUILD_DIR)/debian/run $(PKG_BUILD_DIR)/debian/log $(PKG_BUILD_DIR)
+	mv $(PKG_BUILD_DIR)/debian/run $(PKG_BUILD_DIR)/debian/run_with_supervise $(PKG_BUILD_DIR)/debian/log $(PKG_BUILD_DIR)
 	mv $(PKG_BUILD_DIR)/debian/com.deployacircus.Clown.conf $(PKG_BUILD_DIR)
 	mv $(PKG_BUILD_DIR)/debian/com.deployacircus.Clown.service $(PKG_BUILD_DIR)
 	mkdir -p $(PKG_BUILD_DIR)/usr/lib/clown/

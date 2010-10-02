@@ -4,6 +4,5 @@
 . /etc/environment
 export PATH
 
-
 cd /usr/lib/clown
-exec ruby bin/clown -c /etc/clown/clown.config 2>&1
+exec supervise /usr/lib/clown | logger
