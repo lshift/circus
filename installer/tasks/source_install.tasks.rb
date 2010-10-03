@@ -1,10 +1,11 @@
 namespace :install do
   task :use_source do
     @bootstrap_root = '/tmp'
-    @act_root = 'http://192.168.11.10:9088/acts'
+    @act_root = "http://#{@uri.host}:9088/acts"
     @packages_root = File.expand_path('../../../packages', __FILE__)
     @clown_install_root = '/var/lib/cache/circus/deb'
-    @circus_deb_cfg = "deb file://#{clown_pkg_cache} /"
+    @clown_pkg_cache = '/var/lib/cache/circus/pkg'
+    @circus_deb_cfg = "deb file://#{@clown_pkg_cache} /"
   end
   task :ensure_targets => [:use_source]
   
@@ -20,16 +21,15 @@ namespace :install do
       clown_pkg_staging = '/tmp/clown'
       log_remote_cmd(ssh, "sudo rm -rf #{clown_pkg_staging}")
       log_remote_cmd(ssh, "mkdir -p #{clown_pkg_staging}")
-      scp = Net::SCP.new(ssh.session)
+      scp = create_scp(ssh)
       Dir["#{@packages_root}/debs/*"].each do |f|
         scp.upload!(f, clown_pkg_staging)
       end
       
       # Move the staged files to somewhere that will last a reboot
-      clown_pkg_cache = '/var/lib/cache/circus/pkg'
-      log_remote_cmd(ssh, "sudo rm -rf #{clown_pkg_cache}")
-      log_remote_cmd(ssh, "sudo mkdir -p #{File.dirname(clown_pkg_cache)}")
-      log_remote_cmd(ssh, "sudo mv #{clown_pkg_staging} #{clown_pkg_cache}")
+      log_remote_cmd(ssh, "sudo rm -rf #{@clown_pkg_cache}")
+      log_remote_cmd(ssh, "sudo mkdir -p #{File.dirname(@clown_pkg_cache)}")
+      log_remote_cmd(ssh, "sudo mv #{clown_pkg_staging} #{@clown_pkg_cache}")
     end
   end
   task :clown => :clown_upload
@@ -40,7 +40,8 @@ namespace :install do
       act_fn = act_name_with_arch(name)
       
       @ssh.execute do |ssh|
-        scp = Net::SCP.new(ssh.session)
+        scp = create_scp(ssh)
+        ssh.exec!("sudo rm -f #{@bootstrap_root}/#{act_fn}.act")
         scp.upload!("#{@packages_root}/acts/#{act_fn}.act", "#{@bootstrap_root}/#{act_fn}.act")
       end
     end
@@ -52,5 +53,13 @@ namespace :install do
       sh "#{@circus_tool} upload #{@packages_root}/acts/#{act_fn}.act --actstore #{@act_root}"
     end
     task name => "#{name}_upload" 
+  end
+end
+
+def create_scp(ssh)
+  if ssh.respond_to? :session
+    Net::SCP.new(ssh.session)
+  else
+    Net::SCP.new(ssh)
   end
 end

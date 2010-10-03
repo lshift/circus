@@ -17,10 +17,9 @@ namespace :node do
     @node_env.cli 'up'
     
     # Standard configuration for the installer tasks
-    @deploy_target = 'ssh://vagrant@localhost:22145'
-    @act_arch = 'i386'
+    @deploy_target = 'ssh://vagrant@192.168.11.10'
     @ssh = @node_env.vms[:default].ssh
-    @circus_tool = File.expand_path("../../circus/bin/circus", __FILE__)
+    @uri = URI.parse(@deploy_target)
   end
 
   task :reprovision => [:ensure_node_vm] do

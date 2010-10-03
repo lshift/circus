@@ -28,35 +28,51 @@ namespace :install do
     root_pw = ask("Enter root password for #{@uri.host}: ") { |q| q.echo = false }
 
     opts = {:port => @uri.port || 22, :password => root_pw}
-    @ssh = Net::SSH.start(@uri.host, 'root', opts)
+    @ssh = SSHWrapper.new(Net::SSH.start(@uri.host, 'root', opts))
   end
   
   task :access => [:ensure_root_ssh] do
-    @ssh.exec!('groupadd admin')
+    @ssh.execute do |ssh|
+      ssh.exec!('groupadd admin')
     
-    user_exists = (@ssh.exec!("id #{@current_user} >/dev/null 2>/dev/null; echo $?").strip == '0')
-    unless user_exists
-      log_remote_cmd(@ssh, "useradd -G admin #{@current_user}")
+      user_exists = (ssh.exec!("id #{@current_user} >/dev/null 2>/dev/null; echo $?").strip == '0')
+      unless user_exists
+        log_remote_cmd(ssh, "useradd -G admin #{@current_user}")
+      end
+    
+      current_key = File.read("#{ENV['HOME']}/.ssh/id_rsa.pub").strip
+      log_remote_cmd(ssh, "mkdir -p ~#{@current_user}/.ssh")
+      log_remote_cmd(ssh, "grep '#{current_key}' ~#{@current_user}/.ssh/authorized_keys || " +
+                          "echo '#{current_key}' >>~#{@current_user}/.ssh/authorized_keys")
     end
-    
-    current_key = File.read("#{ENV['HOME']}/.ssh/id_rsa.pub").strip
-    log_remote_cmd(@ssh, "mkdir -p ~#{@current_user}/.ssh")
-    log_remote_cmd(@ssh, "echo '#{current_key}' >~#{@current_user}/.ssh/authorized_keys")
   end
   
   desc "Ensures that a working Chef installation is available on the host"
   task :chef => [:ensure_root_ssh] do
-    chef_location = @ssh.exec('which chef-solo').strip
-    if chef_location.empty?
-      gem_version = @ssh.exec!('gem --version').strip
-      unless ['1.3.6', '1.3.7'].include? gem_version
-        log_remote_cmd(@ssh, 'cd /tmp/circus-install; wget http://production.cf.rubygems.org/rubygems/rubygems-1.3.7.tgz')
-        log_remote_cmd(@ssh, 'cd /tmp/circus-install; tar -xzf rubygems-1.3.7.tgz && cd rubygems-1.3.7 && ruby setup.rb')
-      end
+    @ssh.execute do |ssh|
+      chef_location = ssh.exec!('which chef-solo').strip
+      if chef_location.empty?
+        gem_version = ssh.exec!('gem --version').strip
+        unless ['1.3.6', '1.3.7'].include? gem_version
+          log_remote_cmd(ssh, 'cd /tmp/circus-install; wget http://production.cf.rubygems.org/rubygems/rubygems-1.3.7.tgz')
+          log_remote_cmd(ssh, 'cd /tmp/circus-install; tar -xzf rubygems-1.3.7.tgz && cd rubygems-1.3.7 && ruby setup.rb')
+        end
       
-      log_remote_cmd(@ssh, 'gem install chef')
+        log_remote_cmd(ssh, 'gem install chef')
+      end
     end
   end
   
   task :clown => [:chef]
+end
+
+# Wrapper to put around an SSH connection to provide the execute method for compatibility with Vagrant
+class SSHWrapper
+  def initialize(ssh)
+    @ssh = ssh
+  end
+  
+  def execute
+    yield @ssh
+  end
 end

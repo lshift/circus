@@ -1,26 +1,3 @@
-namespace :remote do
-  desc "Ensures that a TARGET environment variable has been set"
-  task :ensure_target do
-    @target = ENV['TARGET']
-    unless @target
-      puts "Please specify a TARGET host, such as ssh://myserver.com"
-      fail
-    end
-    @uri = URI.parse(@target)
-  
-    @current_user = ENV['USER']
-    @deploy_target = "ssh://#{@current_user}@#{@uri.host}"
-  end
-
-  task :ensure_root_ssh => [:ensure_target] do
-    root_pw = ask("Enter root password for #{@uri.host}: ") { |q| q.echo = false }
-
-    opts = {:port => @uri.port || 22, :password => root_pw}
-    @ssh = Net::SSH.start(@uri.host, 'root', opts)
-    # @scp = Net::SCP.new(@ssh)
-  end
-end
-
 namespace :install do
   BOOTSTRAP_ACTS = [:ruby_stack, :actstore]
   BASE_ACTS = [:booth_support_stack, :database_stack, :web_stack, :booth, :postgres_tamer, :nginx_tamer]
@@ -28,22 +5,25 @@ namespace :install do
   ACTS = BASE_ACTS + OPTIONAL_ACTS
  
   task :ensure_targets do
-    @circus_tool ||= "circus"
+    fail "@deploy_target must have been set before using these .tasks" unless @deploy_target
+    fail "@ssh must have been set before using these .tasks" unless @ssh
+  
+    @circus_tool = File.expand_path("../../../circus/bin/circus", __FILE__) 
     @act_arch ||= ENV['ACT_ARCH'] || determine_arch
     @act_root ||= ENV['ACT_ROOT'] || 'http://repo.deployacircus.com/acts/current'
     @bootstrap_root ||= @act_root
     @circus_deb_cfg ||= "deb http://repo.deployacircus.com/debian highwire main"
-    fail "@deploy_target must have been set before using these .tasks" unless @deploy_target
   end
 
   def determine_arch
-    opts = {:port => @uri.port || 22}
-    @ssh = Net::SSH.start(@uri.host, @current_user, opts)
-
-    case @ssh.exec!("uname -m").strip
-      when "x86_64" then "x64"
-      else "i386"
+    res = 'i386'
+    @ssh.execute do |ssh|
+      res = case ssh.exec!("uname -m").strip
+        when "x86_64" then "x64"
+        else "i386"
+      end
     end
+    res
   end
 
   # Applies the current architecture to an act name, if required
