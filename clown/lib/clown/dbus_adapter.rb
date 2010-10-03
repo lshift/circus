@@ -19,31 +19,45 @@ module Clown
       
       dbus_method :deploy, "in id:s, in name:s, in url:s, in config_url:s" do |id, name, url, config_url|
         logger = Circus::Agents::DBusLogger.new(self, id)
-        begin
+        execute_safely(logger) do
           @worker.deploy(name, url, config_url, logger)
-        rescue
-          @logger.error("Deployment failed - #{$!}")
         end
       end
       
       dbus_method :undeploy, "in id:s, in name:s" do |id, name|
         logger = Circus::Agents::DBusLogger.new(self, id)
-        @worker.undeploy(name, logger)
+        execute_safely(logger) do
+          @worker.undeploy(name, logger)
+        end
       end
       
       dbus_method :reset, "in id:s, in name:s" do |id, name|
         logger = Circus::Agents::DBusLogger.new(self, id)
-        @worker.reset(name, logger)
+        execute_safely(logger) do
+          @worker.reset(name, logger)
+        end
       end
             
       dbus_method :configure, "in id:s, in name:s, in config_url:s" do |id, name, config_url|
         logger = Circus::Agents::DBusLogger.new(self, id)
-        @worker.configure(name, config_url, logger)
+        execute_safely(logger) do
+          @worker.configure(name, config_url, logger)
+        end
       end
       
       dbus_method :exec, "in id:s, in name:s, in command:s" do |id, name, cmd|
         logger = Circus::Agents::DBusLogger.new(self, id)
-        @worker.exec(name, cmd, logger)
+        execute_safely(logger) do
+          @worker.exec(name, cmd, logger)
+        end
+      end
+    end
+    
+    def execute_safely(logger)
+      begin
+        yield
+      rescue
+        logger.failed("#{$!}")
       end
     end
     
