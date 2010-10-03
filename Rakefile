@@ -1,7 +1,5 @@
 require 'vagrant'
 
-require 'rake/remote.tasks'
-
 task :spec do
   ['circus', 'clown', 'booth'].each do |r|
     sh "cd #{r}; rake spec"
@@ -153,55 +151,14 @@ namespace :packaging do
   task :all => [:clown, :debian_repo, :acts, :acts64, :stacks]
 end
 
-namespace :deployment do
-  task :ensure_node_vm do
-    # Load a Vagrant environment for deployment, and ensure that it is available
-    @node_env = Vagrant::Environment.new(:cwd => File.expand_path('../servers/node', __FILE__))
-    @node_env.ui = Vagrant::UI::Shell.new(@node_env, Thor::Base.shell.new)
-    @node_env.load!
-    @node_env.cli('up')
-  end
-  task :ensure_ssh_agent => [:ensure_node_vm] do
-    sh "ssh-add #{@node_env.config.ssh.private_key_path}"
-  end
-
-  task :clown => [:ensure_node_vm] do
-    execute_ssh(@node_env, "sudo rm -rf /usr/lib/clown/lib")
-    execute_ssh(@node_env, "sudo apt-get remove clown --purge -y --force-yes")
-    execute_ssh(@node_env, "sudo apt-get update")
-    execute_ssh(@node_env, "sudo apt-get install clown -y --force-yes")
-  end
-  
-  task :actstore => [:ensure_node_vm, :ensure_ssh_agent] do
-    @node_env.vms[:default].ssh.upload!('packages/acts/actstore-i386.act', '/tmp/actstore.act')
-    sh "circus/bin/circus deploy ssh://vagrant@localhost:22144 actstore /tmp/actstore.act"
-  end
-  
-  task :ruby_stack => [:ensure_node_vm, :ensure_ssh_agent] do
-    @node_env.vms[:default].ssh.upload!('packages/acts/ruby_stack.act', '/tmp/ruby_stack.act')
-    sh "circus/bin/circus deploy ssh://vagrant@localhost:22144 ruby_stack /tmp/ruby_stack.act"
-  end
-  ALL_STACKS.reject { |n| n == :ruby }.each do |stack_name|
-    task "#{stack_name}_stack" => [:ensure_node_vm, :ensure_ssh_agent] do
-      deploy_component("#{stack_name}_stack", nil)
-    end
-  end
-  
-  [:booth, :postgres_tamer, :nginx_tamer].each do |act_name|
-    task act_name => [:ensure_node_vm, :ensure_ssh_agent] do
-      deploy_component(act_name, 'i386')
-    end
-  end
-  
-  task :all_stacks => ALL_STACKS.reject{ |n| n == :ruby }.map { |n| "#{n}_stack" }
-  task :all_app_acts => [:booth, :postgres_tamer, :nginx_tamer]
-  task :all => [:clown, :ruby_stack, :actstore, :all_stacks, :all_app_acts]
-end
+# For installation, use the node build via the Fasttrack, and apply the source installation changes
+load 'fasttrack/Rakefile'
+require 'installer/tasks/source_install.tasks'
 
 namespace :development do
   namespace :clown do
     desc 'Installs a clown onto the node vm, then changes the source directories to use the local lib'
-    task :activate_dev => ['deployment:clown'] do
+    task :activate_dev => ['install:clown'] do
       execute_ssh(@node_env, "sudo rm -r /usr/lib/clown/lib/")
       execute_ssh(@node_env, "sudo ln -s /circus/clown/lib /usr/lib/clown/lib")
     end
