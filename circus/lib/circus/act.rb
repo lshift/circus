@@ -56,14 +56,14 @@ module Circus
       return false unless profile.package_for_deploy(logger, overlay_dir)
       
       begin
-        # Squash the output file
-        include_dirs = ["#{overlay_dir}/*"]
-        include_dirs << "#{@dir}/*" if profile.package_base_dir?
-        include_dirs.concat(profile.extra_dirs)
+        # Package up the output file
+        include_dirs = ["-C #{overlay_dir} ."]
+        include_dirs << "-C #{@dir} ." if profile.package_base_dir?
+        include_dirs.concat(profile.extra_dirs.map { |d| "-C #{File.dirname(d)} #{File.basename(d)}"})
         output_name = File.join(output_root_dir, "#{name}.act")
       
         ExternalUtil.run_external(logger, 'Output packaging', 
-          "mksquashfs #{include_dirs.join(' ')} #{output_name} -noappend -noI -noD -noF 2>&1")
+          "tar -czf #{output_name} --exclude .circus #{include_dirs.join(' ')} 2>&1")
       ensure
         profile.cleanup_after_deploy(logger, overlay_dir)
       end

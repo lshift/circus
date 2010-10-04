@@ -122,14 +122,22 @@ module Clown
         FileUtils.mkdir_p(log_working_dir)
 
         # Phase 1
-        logger.info("Preparing First Phase Scripts")
-        write_script(working_dir, 'mount_app', format_mount_script(name, image_file, working_dir))
-        write_script(working_dir, 'cleanup', format_cleanup_script(name, working_dir))
+        # logger.info("Preparing First Phase Scripts")
+        # write_script(working_dir, 'cleanup', format_cleanup_script(name, working_dir))
 
-        logger.info("Mounting Image")
-        result = `#{working_dir}/mount_app 2>&1`
+        logger.info("Expanding Image")
+        act_dir = mk_act_dir(name, working_dir)
+        FileUtils.mkdir_p(act_dir)
+        result = `cd #{act_dir} && tar -xzf #{image_file} 2>&1`
         if $? != 0
-          logger.error("Failed to execute mount image\n" + result)
+          logger.error("Failed to expand image\n" + result)
+          return false
+        end
+        
+        logger.info("Securing Files")
+        result = `cd #{act_dir} 2>&1 && chmod -R ugo-w . 2>&1 && chown -R root:root . 2>&1`
+        if $? != 0
+          logger.error("Failed to secure files\n" + result)
           return false
         end
         
@@ -154,7 +162,7 @@ module Clown
         end
 
         # Phase 2
-        logger.info("Preparing Second Phase Scripts")
+        logger.info("Preparing Scripts")
         env = build_environment(name, working_dir, apply_config, logger)
         write_script(working_dir, 'with_env', format_env_script(name, working_dir, env))
         write_script(working_dir, 'run', format_run_script(name, working_dir, env))
@@ -166,7 +174,7 @@ module Clown
       def cleanup_working_dir(name, logger)
         working_dir = mk_working_dir(name)
         cleanup_f = "#{working_dir}/cleanup"
-      
+              
         if File.exists? cleanup_f
           logger.info("Executing Cleanup")
           result = `#{cleanup_f} 2>&1`
@@ -307,22 +315,6 @@ module Clown
           FileUtils.chmod(0755, fn)
         end
       
-        def format_mount_script(name, image_file, working_dir)
-          act_dir = mk_act_dir(name, working_dir)
-          act_run_script = File.join(act_dir, 'run')
-          
-          template = <<-EOT
-            #!/bin/sh
-        
-            set -e
-            
-            # Create directories and mount the file system
-            [ -d #{act_dir} ] || mkdir -p #{act_dir}
-            [ -f #{act_run_script} ] || mount #{image_file} #{act_dir} -t squashfs -o loop
-          EOT
-          cleanup_template(template)
-        end
-
         def format_env_script(name, working_dir, env)
           act_dir = mk_act_dir(name, working_dir)
 
@@ -331,9 +323,6 @@ module Clown
 
             set -e
 
-            # Ensure everything is mounted
-            #{working_dir}/mount_app
-            
             # Set HOME so applications that require it work
             export HOME=#{env[:home_dir]}
 
@@ -370,20 +359,6 @@ module Clown
             #!/bin/sh
 
             exec setuidgid #{env[:user]} logger
-          EOT
-          cleanup_template(template)
-        end
-        
-        def format_cleanup_script(name, working_dir)
-          act_dir = mk_act_dir(name, working_dir)
-          act_run_script = File.join(act_dir, 'run')
-          
-          template = <<-EOT
-            #!/bin/sh
-            
-            set -e
-            
-            [ ! -f #{act_run_script} ] || umount #{act_dir}
           EOT
           cleanup_template(template)
         end
