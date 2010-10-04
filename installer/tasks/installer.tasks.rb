@@ -3,11 +3,14 @@ namespace :install do
   BASE_ACTS = [:booth_support_stack, :database_stack, :web_stack, :booth, :postgres_tamer, :nginx_tamer]
   OPTIONAL_ACTS = [:erlang_stack, :java_web_stack, :python_stack, :static_web_stack]
   ACTS = BASE_ACTS + OPTIONAL_ACTS
- 
-  task :ensure_targets do
-    fail "@deploy_target must have been set before using these .tasks" unless @deploy_target
-    fail "@ssh must have been set before using these .tasks" unless @ssh
   
+  desc "Placeholder allowing arguments to be parsed"
+  task :parse_args do
+  end
+ 
+  task :ensure_targets => :parse_args do
+    fail "@deploy_target must have been set before using these .tasks" unless @deploy_target
+    
     @circus_tool = File.expand_path("../../../circus/bin/circus", __FILE__) 
     @act_arch ||= ENV['ACT_ARCH'] || determine_arch
     @act_root ||= ENV['ACT_ROOT'] || 'http://repo.deployacircus.com/acts/current'
@@ -61,6 +64,9 @@ namespace :install do
   
   task :acts => [:bootstrap, :base_acts, :optional_acts]
   task :all => [:clown, :acts]
+  task :all_basic => [:clown, :bootstrap, :base_acts]
+  
+  task :build_host => [:clown, :bootstrap, :booth_support_stack, :booth]
 end
 
 def log_remote_cmd(ssh, cmd)

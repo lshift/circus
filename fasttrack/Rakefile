@@ -32,5 +32,5 @@ namespace :node do
   task :build => 'install:all'
 end
 namespace :install do
-  task :ensure_targets => ['node:ensure_node_vm', 'node:ensure_ssh_agent']
+  task :parse_args => ['node:ensure_node_vm', 'node:ensure_ssh_agent']
 end
