@@ -11,6 +11,7 @@ module Clown
   end
 end
 
-
-runner = Clown::Runner.new(ARGV)
-runner.run!
+Bundler.with_clean_env do
+  runner = Clown::Runner.new(ARGV)
+  runner.run!
+end

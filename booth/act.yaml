@@ -7,3 +7,5 @@ requirements:
   execution-user: booth
   user-profile: 
     - booth
+  system-properties:
+    GEM_HOME: "$HOME/.gem"

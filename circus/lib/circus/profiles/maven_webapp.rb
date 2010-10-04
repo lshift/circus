@@ -46,12 +46,13 @@ module Circus
       def prepare_for_deploy(logger, overlay_dir)
         # Build the maven package, then copy the output into the overlay directory
         logger.info("Building maven application #{@name}")
-        return false unless run_external(logger, 'Perform maven packaging', "cd #{@dir}; mvn package")
+        return false unless run_external(logger, 'Perform maven packaging', "cd #{@dir}; mvn package -Dmaven.test.skip=true")
         
         logger.info("Expanding artifact #{app_final_name}.war")
         final_full_path = File.expand_path("target/#{app_final_name}.war")
         return false unless run_external(logger, 
-          'Expand application artifact', "mkdir #{overlay_dir}/#{@name} && unzip target/#{app_final_name}.war -d #{overlay_dir}/#{@name}/")
+          'Expand application artifact', 
+          "mkdir #{overlay_dir}/#{@name} && unzip #{@dir}/target/#{app_final_name}.war -d #{overlay_dir}/#{@name}/")
         
         logger.info("Generating configuration files for #{@name}")
         write_template('maven_webapp_jetty.xml.erb', "#{overlay_dir}/jetty.xml")

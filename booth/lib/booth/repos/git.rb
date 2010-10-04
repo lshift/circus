@@ -16,11 +16,11 @@ module Booth
       end
       
       def create_application(name, repo_dir, url, config, logger)
-        `(cd #{repo_dir}; git clone #{url} .)`
+        result = `(cd #{repo_dir}; git clone #{url} . 2>&1)`
         unless $? == 0
           FileUtils.rm_r repo_dir
 
-          logger.error('Failed to clone repository')
+          logger.error('Failed to clone repository: ' + result)
           return false
         end
         
@@ -32,9 +32,9 @@ module Booth
       end
       
       def prepare(name, repo_dir, commit_id, patch_fn, logger)
-        `(cd #{repo_dir} && git fetch && git reset --hard #{commit_id} && git clean -f -x)`
+        result = `(cd #{repo_dir} && git fetch 2>&1 && git reset --hard #{commit_id} 2>&1 && git submodule update -i 2>&1 && git clean -d -f -x 2>&1)`
         unless $? == 0
-          logger.error('Failed to prepare repository')
+          logger.error('Failed to prepare repository: ' + result)
           return false
         end
         

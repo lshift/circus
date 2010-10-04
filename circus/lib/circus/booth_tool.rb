@@ -61,6 +61,7 @@ module Circus
       end
       admitted = Circus::Agents::Encoding.decode(client.admit(booth[:booth], booth[:booth_id], current_rev, apply_patch_fn, apps).result)
       
+      return if booth[:target] == 'none'
       clown_connection = ConnectionBuilder.new(options).build(booth[:target])
       clown_client = ClownClient.new(clown_connection, @logger)
       admitted.each do |name, url|

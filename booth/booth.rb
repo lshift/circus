@@ -1,12 +1,7 @@
-begin
-  # Try to require the preresolved locked set of gems.
-  require File.expand_path('../../.bundle/environment', __FILE__)
-rescue LoadError
-  # Fall back on doing an unlocked resolve at runtime.
-  require "rubygems"
-  require "bundler"
-  Bundler.setup
-end
+require "rubygems"
+require "bundler"
+Bundler.setup
+
 $: << File.expand_path('../lib', __FILE__)
 
 require 'booth/config'
@@ -32,7 +27,9 @@ config = Booth::Config.new(File.expand_path('../config/booth.config', __FILE__))
 
 # Set our HOME to our current user's profile dir to make various build tools work
 etc_pw_details = Etc.getpwnam(`id -un`.strip)
-ENV['HOME'] = etc_pw_details.dir || config.data_dir
+# ENV['HOME'] = etc_pw_details.dir || config.data_dir
 
-booth_dbus = Booth::DBusAdapter.new(Booth::Worker.new(nil, config))
-booth_dbus.run
+Bundler.with_clean_env do
+  booth_dbus = Booth::DBusAdapter.new(Booth::Worker.new(nil, config))
+  booth_dbus.run
+end

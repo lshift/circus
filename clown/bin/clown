@@ -3,14 +3,7 @@
 $LOAD_PATH.unshift File.expand_path('../../bootstrap/bundler/lib', __FILE__)
 require "rubygems"
 require "bundler"
-
-# Backup the path before running
-current_path = ENV['PATH']
 Bundler.setup
-ENV['PATH'] = current_path
-ENV.delete 'RUBYOPT'
-ENV.delete 'BUNDLE_BIN_PATH'
-ENV.delete 'BUNDLE_GEMFILE'
 
 $: << File.expand_path(File.dirname(__FILE__) + "/../lib")
 $: << File.expand_path(File.dirname(__FILE__) + "/../vendor/gems/circus/lib")
