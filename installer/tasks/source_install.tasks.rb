@@ -1,7 +1,10 @@
 namespace :install do
+  # Configures the build to use source. Hardwires a bunch of properties to local variants. By default, will upload acts
+  # to the remote machine's actstore. If the host doesn't have an actstore (and isn't going to get one), then use
+  # the VIA attribute to store the acts into another store, and retrieve them from there.
   task :use_source do
     @bootstrap_root = '/tmp'
-    @act_root = "http://#{@uri.host}:9088/acts"
+    @act_root = ENV['VIA'] || "http://#{@uri.host}:9088/acts"
     @packages_root = File.expand_path('../../../packages', __FILE__)
     @clown_install_root = '/var/lib/cache/circus/deb'
     @clown_pkg_cache = '/var/lib/cache/circus/pkg'
