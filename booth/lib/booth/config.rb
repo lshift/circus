@@ -38,7 +38,7 @@ module Booth
     optional_opt :host, :port
     
     # Storage configuration
-    required_opt :act_store, :data_dir => 'DATA_DIR'
+    required_opt :act_store => 'ACTSTORE_ROOT', :data_dir => 'DATA_DIR'
     
     # Build configuration
     required_opt :build_dir => 'BUILD_DIR'

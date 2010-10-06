@@ -157,7 +157,7 @@ module Clown
             end
           else
             # Assume that we've just got a raw yaml file
-            FileUtils.cp(config_src, File.join(config_dir, 'resources.yaml'))
+            FileUtils.cp(config_src, File.join(config_dir, 'requirements.yaml'))
           end
         end
 
@@ -393,6 +393,7 @@ module Clown
             resource_data = {}
           end
           if File.exists?(config_requirements_fn)
+            logger.info("Applying additional configuration properties")
             Resources.apply_config_resources(resource_data, YAML.load(File.read(config_requirements_fn)))
           end
           Resources.update_env(@config, name, resource_data, env, logger)
