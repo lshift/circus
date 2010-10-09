@@ -20,7 +20,7 @@ module Clown
 
       return unless download_act(name, url, logger)
       return unless download_config(name, config_url, logger) unless config_url.empty?
-      return unless env = prepare_working_dir(name, !config_url.empty?, logger)
+      return unless env = prepare_working_dir(name, logger)
       if env[:persistent_run]
         return unless activate_image(name, logger)
         return unless await_service_startup(name, logger)
@@ -50,7 +50,7 @@ module Clown
         return false
       end
 
-      Circus::ExternalUtil.run_and_show_external(logger, 'Requested command', `#{working_dir}/with_env #{command}`)
+      Circus::ExternalUtil.run_and_show_external(logger, 'Requested command', "#{working_dir}/with_env #{command}")
     end
     
     def reset(name, logger)
@@ -67,7 +67,7 @@ module Clown
       download_config(name, config_url, logger)
       deactivate_image(name, logger)
       cleanup_working_dir(name, logger)
-      prepare_working_dir(name, true, logger)
+      prepare_working_dir(name, logger)
       activate_image(name, logger)
 
       logger.info("Done")
@@ -112,7 +112,7 @@ module Clown
         true
       end
       
-      def prepare_working_dir(name, apply_config, logger)
+      def prepare_working_dir(name, logger)
         image_file = mk_image_file(name)
         working_dir = mk_working_dir(name)
         log_working_dir = mk_log_working_dir(name)
@@ -142,12 +142,14 @@ module Clown
         end
         
         # Prepare config
+        config_src = mk_config_file(name)
+        apply_config = File.exists?(config_src)
         if apply_config
+          logger.info("Preparing additional configuration")
           config_dir = File.join(working_dir, 'config')
           FileUtils.mkdir_p(config_dir)
           
           # Sniff the config file to see if it is a compressed archive
-          config_src = mk_config_file(name)
           file_type = `file -b --mime-type #{config_src}`
           if file_type == 'application/x-gzip'
             result = `tar -xzf #{config_src} -C #{config_dir}`
