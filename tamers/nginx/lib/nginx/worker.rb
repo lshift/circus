@@ -12,6 +12,7 @@ module Nginx
         
         location / {
           proxy_pass  http://#{target};
+          proxy_set_header Host $host;
         }
       }
       EOT
