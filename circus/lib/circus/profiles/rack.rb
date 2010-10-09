@@ -40,6 +40,18 @@ module Circus
         end
       end
       
+      # Describes the requirements of the deployed application. Rack applications automatically
+      # have an environment system property applied for RACK_ENV and RAILS_ENV
+      def requirements
+        res = super
+
+        res['system-properties'] ||= {}
+        res['system-properties']['RACK_ENV'] = 'production'
+        res['system-properties']['RAILS_ENV'] = 'production'
+        
+        res
+      end
+      
       private
         def listen_port
           @props['web-app-port'] || 3000
