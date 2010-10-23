@@ -18,6 +18,12 @@ module Circus
         true
       end
       
+      # Whether acts using the given profile can be run during development. If this returns false,
+      # then local only commands (such as go) will ignore these items.
+      def supported_for_development?
+        true
+      end
+      
       def package_base_dir?
         true
       end

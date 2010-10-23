@@ -41,12 +41,13 @@ module Circus
       
       load! unless @acts
 
-      acts.each do |act|
+      run_acts = acts.select { |a| a.profile.supported_for_development? }
+      run_acts.each do |act|
         logger.info "Starting act #{act.name} at #{act.dir} using profile #{act.profile.name}"
       end
       logger.info "---------------------"
       FileUtils.rm_rf(private_run_root)
-      acts.each do |act|
+      run_acts.each do |act|
         return unless act.package_for_dev(logger, private_run_root)
       end
       

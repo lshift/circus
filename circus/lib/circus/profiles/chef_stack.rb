@@ -34,6 +34,11 @@ module Circus
         false
       end
       
+      # Stacks are not useful in development
+      def supported_for_development?
+        false
+      end
+      
       def dev_run_script_content
         shell_run_script do
           <<-EOT
