@@ -170,6 +170,13 @@ module Clown
         write_script(working_dir, 'run', format_run_script(name, working_dir, env))
         write_script(log_working_dir, 'run', format_log_run_script(env))
         
+        logger.info("Creating tmp and log directories")
+        result = `cd #{act_dir} 2>&1 && mkdir tmp log 2>&1 && chmod 700 tmp log 2>&1 && chown #{env[:user]}:#{env[:user]} tmp log 2>&1`
+        if $? != 0
+          logger.error("Failed to create tmp and log directories\n" + result)
+          return false
+        end
+        
         env
       end
           
