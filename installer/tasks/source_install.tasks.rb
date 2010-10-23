@@ -13,8 +13,8 @@ namespace :install do
   task :ensure_targets => [:use_source]
   
   # Ensure that the Clown installation depends on uploading the Clown first
-  task :clown_upload => :ensure_targets do
-    @ssh.execute do |ssh|
+  task :clown_upload => [:ensure_targets, :ensure_root_ssh] do
+    @root_ssh.execute do |ssh|
       # In some development scenarios, we symlink clown/lib to a dev install. Package uninstalls sometimes
       # wipe these in unexpected ways - leaving us with no local source code! If we remove it first, then
       # we're safe.

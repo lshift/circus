@@ -25,16 +25,22 @@ namespace :install do
   end
   task :parse_args => :parse_target
     
-  task :ensure_root_ssh => :parse_target do
+  task :connect_nonroot_ssh_via_key => :parse_target do
+    opts = {:port => @uri.port || 22}
+    @ssh = SSHWrapper.new(Net::SSH.start(@uri.host, @current_user, opts))
+  end
+  task :ensure_ssh => :connect_nonroot_ssh_via_key
+    
+  task :connect_root_ssh_with_password => :parse_target do
     root_pw = ask("Enter root password for #{@uri.host}: ") { |q| q.echo = false }
 
     opts = {:port => @uri.port || 22, :password => root_pw}
-    @ssh = SSHWrapper.new(Net::SSH.start(@uri.host, 'root', opts))
+    @root_ssh = SSHWrapper.new(Net::SSH.start(@uri.host, 'root', opts))
   end
-  task :ensure_targets => :ensure_root_ssh
+  task :ensure_root_ssh => :connect_root_ssh_with_password
   
   task :access => [:ensure_root_ssh] do
-    @ssh.execute do |ssh|
+    @root_ssh.execute do |ssh|
       ssh.exec!('groupadd admin')
     
       user_exists = (ssh.exec!("id #{@current_user} >/dev/null 2>/dev/null; echo $?").strip == '0')
@@ -51,7 +57,7 @@ namespace :install do
   
   desc "Ensures that a working Chef installation is available on the host"
   task :chef => [:ensure_root_ssh] do
-    @ssh.execute do |ssh|
+    @root_ssh.execute do |ssh|
       chef_location = (ssh.exec!('which chef-solo') || "").strip
       if chef_location.empty?
         gem_version = ssh.exec!('gem --version').strip
