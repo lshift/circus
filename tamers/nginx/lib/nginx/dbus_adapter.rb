@@ -24,7 +24,7 @@ module Nginx
         details = JSON.parse(spec)
         logger.info("Allocating host: #{details['hostname']} to #{details['target']}")
         
-        [@worker.forward_hostname(details['hostname'], details['target'], logger)]
+        [@worker.forward_hostname(details['hostname'], details['target'], details['app_root'], logger)]
       end
     end
     

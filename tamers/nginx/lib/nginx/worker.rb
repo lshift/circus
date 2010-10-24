@@ -4,15 +4,27 @@ module Nginx
       @config = config
     end
 
-    def forward_hostname(hostname, target, logger)
+    def forward_hostname(hostname, target, app_root, logger)
+      unless app_root
+        app_root = '/var/www/no-root-dir'
+      end
+      
       config = <<-EOT
       server {
         listen 80;
         server_name #{hostname};
+        root #{app_root};
+        
         
         location / {
-          proxy_pass  http://#{target};
+          if (-f $request_filename) {
+            break;
+          }
+        
           proxy_set_header Host $host;
+          if (!-f $request_filename) {
+            proxy_pass  http://#{target};
+          }
         }
       }
       EOT
