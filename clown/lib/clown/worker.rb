@@ -88,8 +88,12 @@ module Clown
             FileUtils.cp(url, target_file)
           when 'http'
             File.open(target_file, 'wb') do |f|
-              content = Net::HTTP.get(URI.parse(url))
-              f.write(content)
+              resp = Net::HTTP.get_response(URI.parse(url))
+              unless resp.code == '200'
+                logger.error('Failed to download act')
+                return false
+              end
+              f.write(resp.body)
             end
         end
         
@@ -105,8 +109,12 @@ module Clown
 
         # Download the content
         File.open(target_file, 'wb') do |f|
-          content = Net::HTTP.get(URI.parse(config_url))
-          f.write(content)
+          resp = Net::HTTP.get_response(URI.parse(config_url))
+          unless resp.code == '200'
+            logger.error('Failed to download config')
+            return false
+          end
+          f.write(resp.body)
         end
         
         true
