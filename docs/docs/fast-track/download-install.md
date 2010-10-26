@@ -29,10 +29,9 @@ To run your deployment node, you'll need <a href="http://www.vagrantup.com">Vagr
 So, before you can proceed, you'll need a working Vagrant/VirtualBox install. This consists of:
 
  * Ensure that you have a working VirtualBox 3.2.x (non-OSE) install (at the time of writing, version 3.2.6 was known to work well)
- * Install Vagrant and download the necessary base boxes:
+ * Install Vagrant:
  {% highlight bash %}
  $ sudo gem install vagrant
- $ vagrant box add lucid32v2 http://s3.lds.li/vagrant/lucid32v2.box
  {% endhighlight %}
 
 Now that Virtual Machines can be created, change into the `fasttrack` directory of your circus checkout, and execute:
