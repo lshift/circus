@@ -30,7 +30,7 @@ module Circus
       
       def current_revision
         result = `(cd #{@dir}; git rev-parse HEAD)`
-        return result.strip unless result
+        return result.strip unless $?.exitstatus != 0
       end
       
       def write_patch(patch_fn)
