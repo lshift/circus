@@ -17,4 +17,6 @@ package "reprepro"
 package 'squashfs-tools'
 
 gem_package 'rake'
-gem_package 'rspec'
+gem_package 'rspec' do
+	version '1.3.0'
+end
