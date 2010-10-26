@@ -25,6 +25,11 @@ module Circus
           repo_helper.repo_url
         end
       
+      unless repo_url
+          logger.error("Could not detect repository source url")
+          return false
+      end
+
       app_name = options[:app_name] || File.basename(File.expand_path('.'))
 
       @logger.info("Creating booth connection #{name} on #{booth} for #{repo_url} as #{app_name}")
