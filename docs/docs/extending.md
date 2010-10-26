@@ -9,17 +9,15 @@ If you'd like to extend Circus, the first thing you'll need is a development env
 The source for Circus is available from GitHub.
 
 {% highlight bash %}
-$ git clone git://github.com/paulj/circus
+$ git clone git://github.com/lshift/circus
 {% endhighlight %}
 
 ## Setup Dependencies
 The Circus build environment relies heavily on <a href="http://vagrantup.com">Vagrant</a> to provide reproducible Virtual Machines in a simple, automated manner. Briefly, to get Vagrant working:
  * Ensure that you have a working VirtualBox 3.2.x (non-OSE) install (at the time of writing, version 3.2.6 was known to work well)
- * Install Vagrant and download the necessary base boxes:
+ * Install Vagrant:
   {% highlight bash %}
   $ sudo gem install vagrant
-  $ vagrant box add lucid32v2 http://s3.lds.li/vagrant/lucid32v2.box
-  $ vagrant box add lucid64v2 http://s3.lds.li/vagrant/lucid64v2.box
   {% endhighlight %}
 
 You'll also want to install the development dependencies via the <a href="http://gembundler.com">Ruby Gem Bundler</a>:
@@ -55,5 +53,5 @@ packages/debs/Packages.gz
 Alongside the packaging VMs, the Circus build environment also defines a node VM that can be used to test the various components built as part of circus. All components can be deployed to it automatically by running:
 
 {% highlight bash %}
-$ rake deployment:all
+$ rake install:all
 {% endhighlight %}
