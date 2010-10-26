@@ -33,7 +33,13 @@ A few things to note here:
  * The IP 192.168.11.1 was allocated during the install of your node. Your deployment node will be listening on 192.168.11.10.
  * The git clone emits a warning. It can be safely ignored.
 
-Now we've got a working directory for our application, lets write it. We're going to use <a href="http://www.sinatrarb.com/">Sinatra</a>.
+Now we've got a working directory for our application, lets write it. We're going to use <a href="http://www.sinatrarb.com/">Sinatra</a>, so we need a few dependencies first:
+{% highlight bash %}
+$ sudo gem install thin
+$ sudo gem install sinatra -v 1.0
+{% endhighlight %} 
+
+and then some files:
 
 __config.ru__
 {% highlight ruby %}
