@@ -6,3 +6,4 @@ run_list:
 - recipe[squashfs]
 - recipe[mercurial]
 - recipe[git]
+- recipe[build]
