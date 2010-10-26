@@ -34,6 +34,10 @@ module Booth
       def prepare(name, repo_dir, commit_id, patch_fn, logger)
         result = `(cd #{repo_dir} && git fetch 2>&1 && git reset --hard #{commit_id} 2>&1 && git submodule update -i 2>&1 && git clean -d -f -x 2>&1)`
         unless $? == 0
+          if result.index("Could not parse object")
+              logger.error("Failed to prepare repository. Have you pushed to the repository?")
+              return false
+          end
           logger.error('Failed to prepare repository: ' + result)
           return false
         end
