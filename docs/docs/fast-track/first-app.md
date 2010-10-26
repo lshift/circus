@@ -5,7 +5,7 @@ title: Fast Track - Deploying your first application
 # Deploying your first application
 Our first Circus deployed application is going to be written in Ruby. Please do be aware that Circus is capable of much more than just Ruby, but seeing as much of Circus already runs in Ruby, we've got all the dependencies installed already - so it makes it nice and easy to get going. The aim will be to write a very simple web application that shows a hello world page - obviously very cliched, but nonetheless still a useful starting point.
 
-Circus also requires a source repository shared between both your machine and the deployment node running the booth. Since setting up a source control server is far beyond the scope of this tutorial, we're going to cheat and use `git daemon` running out of a local repository.
+Circus also requires a source repository shared between both your machine and the deployment node running the booth. Since setting up a source control server is far beyond the scope of this tutorial, we're going to cheat and use `git daemon` running out of a local repository. You'll need a fairly recent version of git for this (1.5.6.5 doesn't work, 1.7.1 does, YMMV with versions inbetween)
 
 ## Setting up your Git "Server"
 As mentioned above, we're going to use git daemon to run a local git server. To do this, we'll create a repository for the server to work off, then run git daemon in it.
