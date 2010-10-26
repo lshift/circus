@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
+require 'bundler/cli'
 require 'bundler'
-require 'thor'
 
 Bundler.ui = Bundler::UI::Shell.new(Thor::Shell::Basic.new)
 
