@@ -29,7 +29,8 @@ module Circus
       end
       
       def current_revision
-        `(cd #{@dir}; git rev-parse HEAD)`.strip
+        result = `(cd #{@dir}; git rev-parse HEAD)`
+        return result.strip unless result
       end
       
       def write_patch(patch_fn)

@@ -46,6 +46,11 @@ module Circus
 
       repo_helper = Repos.find_repo_by_id(booth[:repo_type]).new(File.expand_path('.'))
       current_rev = repo_helper.current_revision
+
+      unless current_rev
+          @logger.error("Could not detect current repository version")
+          return false
+      end
       
       @logger.info("Starting admission into #{name} of version #{current_rev}")
       connection = ConnectionBuilder.new(booth).build(booth[:booth])
