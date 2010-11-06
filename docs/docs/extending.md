@@ -14,11 +14,11 @@ $ git clone git://github.com/lshift/circus
 
 ## Setup Dependencies
 The Circus build environment relies heavily on <a href="http://vagrantup.com">Vagrant</a> to provide reproducible Virtual Machines in a simple, automated manner. Briefly, to get Vagrant working:
- * Ensure that you have a working VirtualBox 3.2.x (non-OSE) install (at the time of writing, version 3.2.6 was known to work well)
+ * Ensure that you have a working VirtualBox 3.2.x (non-OSE) install (at the time of writing, version 3.2.8 was known to work well)
  * Install Vagrant:
-  {% highlight bash %}
-  $ sudo gem install vagrant
-  {% endhighlight %}
+{% highlight bash %}
+$ sudo gem install vagrant
+{% endhighlight %}
 
 You'll also want to install the development dependencies via the <a href="http://gembundler.com">Ruby Gem Bundler</a>:
 {% highlight bash %}
