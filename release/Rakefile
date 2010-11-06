@@ -3,8 +3,6 @@ require 'net/scp'
 require 'uri'
 require 'highline/import'
 
-require File.expand_path('../../rake/remote.tasks', __FILE__)
-
 task :clean do
   rm_rf 'pkg_tmp'
   rm_rf 'packages'
@@ -39,7 +37,16 @@ EOC
       f.write(new_change)
       f.write(current_changes)
     end
-    sh "git commit -m \"[Release #{@output_version}]: #{change_msg}\" ../clown/debian/changelog"
+    
+    File.open('../circus/lib/circus/version.rb', 'w') do |f|
+      f.write <<-EOV
+module Circus
+  VERSION = "#{@output_version}"
+end
+EOV
+    end
+    
+    sh "git commit -m \"[Release #{@output_version}]: #{change_msg}\" ../clown/debian/changelog ../circus/lib/circus/version.rb"
     sh "git tag v#{@output_version}"
   else
     puts "Tag v#{@output_version} already exists. Not tagging"
@@ -63,7 +70,7 @@ task :package => [:tag] do
 end
 
 desc "Publishes a build to the repository"
-task :publish => [:ensure_version, 'remote:ensure_root_ssh'] do
+task :publish_site => [:ensure_version, 'remote:ensure_root_ssh'] do
   Rake::Task[:package].invoke unless File.exists?('packages')
 
   # Remove any previous staged acts or debian repo
@@ -85,10 +92,46 @@ task :publish => [:ensure_version, 'remote:ensure_root_ssh'] do
   log_remote_cmd(@ssh, "ln -sf /var/www/circus-repo/acts/#{@output_version} /var/www/circus-repo/acts/current")
 end
 
+task :publish_gem => [:ensure_version] do
+  Rake::Task[:package].invoke unless File.exists?('packages')
+  
+  sh "gem push packages/gems/circus-deployment-#{@output_version}.gem"
+end
+
 task :ensure_version do
   @output_version = ENV['VERSION']
   unless @output_version
     puts "Please specify a released VERSION, such as 0.0.1"
     fail
+  end
+end
+
+namespace :remote do
+  desc "Ensures that a TARGET environment variable has been set"
+  task :ensure_target do
+    @target = ENV['TARGET']
+    unless @target
+      puts "Please specify a TARGET host, such as ssh://myserver.com"
+      fail
+    end
+    @uri = URI.parse(@target)
+  
+    @current_user = ENV['USER']
+    @deploy_target = "ssh://#{@current_user}@#{@uri.host}"
+  end
+
+  task :ensure_root_ssh => [:ensure_target] do
+    root_pw = ask("Enter root password for #{@uri.host}: ") { |q| q.echo = false }
+
+    opts = {:port => @uri.port || 22, :password => root_pw}
+    @ssh = Net::SSH.start(@uri.host, 'root', opts)
+    @scp = Net::SCP.new(@ssh)
+  end
+end
+
+def log_remote_cmd(ssh, cmd)
+  ssh.exec!(cmd) do |channel, stream, data|
+    STDOUT << data if stream == :stdout
+    STDERR << data if stream == :stderr
   end
 end
