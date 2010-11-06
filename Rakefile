@@ -1,8 +1,31 @@
 require 'vagrant'
 
-task :spec do
-  ['circus', 'clown', 'booth'].each do |r|
-    sh "cd #{r}; rake spec"
+namespace :test do
+  desc 'All Circus tests from individual modules to acceptance'
+  task :all
+  
+  [:circus, :clown, :booth].each do |r|
+    desc "#{r} submodule specifications"
+    task r do
+      sh "cd #{r} && rake spec"
+    end
+    
+    task :all => r
+  end
+  
+  begin
+    gem 'rspec', '~> 2.0.0'
+    require 'rspec/core/rake_task'
+  rescue LoadError
+    $stderr.puts 'Run `gem install rspec -v "~> 2.0.0"` to be able to run specs'
+  else
+    desc "Top level Circus acceptance specs"
+    RSpec::Core::RakeTask.new(:acceptance) do |t|
+      t.pattern = 'spec/**/*_spec.rb'
+      t.rspec_opts = %w(-fs --color)
+    end
+    
+    task :all => :acceptance
   end
 end
 
@@ -169,11 +192,23 @@ namespace :development do
   end
 end
 
-
 namespace :cleanup do
   task :booth => ['deployment:ensure_node_vm', 'deployment:ensure_ssh_agent'] do
     sh "circus/bin/circus undeploy ssh://vagrant@localhost:22144 booth"
   end
+  
+  task :fasttrack_vm do
+    if File.exists? 'fasttrack/.vagrant'
+      sh 'cd fasttrack && vagrant destroy'
+    end
+  end
+  task :packaging_vms do
+    if File.exists? 'servers/packaging/.vagrant'
+      sh 'cd servers/packaging && vagrant destroy'
+    end
+  end
+
+  task :vms => [:fasttrack_vm, :packaging_vms]
 end
 
 def execute_ssh(env, command, vm_id = :default)
