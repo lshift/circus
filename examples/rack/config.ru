@@ -1,10 +1,10 @@
 require 'rubygems'
+require 'bundler'
+Bundler.setup
 require 'sinatra'
 
-class App < Sinatra::Base
-  get '/' do
-    "Hello World"
-  end
+get '/' do
+  "Hello World"
 end
 
-run App
+run Sinatra::Application
