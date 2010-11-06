@@ -115,9 +115,6 @@ circus integration in development.
 $ circus admit --uncommitted
 {% endhighlight %}
 
-{% highlight bash %}
-{% endhighlight %}
-
 ## Manual Application Deployment ##
 In some scenarios, you'll already have a packaged act available, and wish to deploy it onto your circus infrastructure. The Circus command line
 tool provides a series of commands for doing this.
