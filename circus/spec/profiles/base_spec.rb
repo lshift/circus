@@ -1,3 +1,5 @@
+require 'circus/profiles/base'
+
 describe Circus::Profiles::Base do
   before :each do
     FileUtils.rm_rf(TMP_DIR)

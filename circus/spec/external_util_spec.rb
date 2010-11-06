@@ -1,3 +1,5 @@
+require 'circus/external_util'
+
 describe Circus::ExternalUtil do
   before :each do
     FileUtils.rm_rf(TMP_DIR)
