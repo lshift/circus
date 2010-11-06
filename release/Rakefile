@@ -89,6 +89,7 @@ task :publish_site => [:ensure_version, 'remote:ensure_root_ssh'] do
   log_remote_cmd(@ssh, "rm -rf /var/www/circus-repo/acts/#{@output_version}")
   log_remote_cmd(@ssh, "mv /var/www/circus-repo/acts/new /var/www/circus-repo/acts/#{@output_version}")
   log_remote_cmd(@ssh, "chmod 644 /var/www/circus-repo/acts/#{@output_version}/*")
+  log_remote_cmd(@ssh, "rm /var/www/circus-repo/acts/current")
   log_remote_cmd(@ssh, "ln -sf /var/www/circus-repo/acts/#{@output_version} /var/www/circus-repo/acts/current")
 end
 
