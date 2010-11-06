@@ -94,7 +94,7 @@ module Circus
     method_option :uncommitted, :desc => 'Indicates that the current uncommitted changes should be sent to the booth and included in the app'
     def admit(name = nil, *apps)
       tool = BoothTool.new(LOGGER, LocalConfig.new)
-      tool.admit(name, apps, options)
+      exit 1 unless tool.admit(name, apps, options)
     end
 
     desc "exec TARGET [ACT] [CMD]", "Executes the given command in the deployed context of the given act"
@@ -107,14 +107,14 @@ module Circus
       
       connection = ConnectionBuilder.new(options).build(target)
       client = ClownClient.new(connection, LOGGER)
-      client.exec(target, act_name, cmd).result
+      exit 1 unless client.exec(target, act_name, cmd).result
     end
     
     desc "reset TARGET ACT", "Restarts the given act on the target host"
     def reset(target, act_name)
       connection = ConnectionBuilder.new(options).build(target)
       client = ClownClient.new(connection, LOGGER)
-      client.reset(target, act_name).result
+      exit 1 unless client.reset(target, act_name).result
     end
     
     desc "deploy TARGET NAME ACT", "Deploy the named object using the given act onto the given target server"

@@ -26,8 +26,8 @@ module Circus
         end
       
       unless repo_url
-          logger.error("Could not detect repository source url")
-          return false
+        @logger.error("Could not detect repository source url")
+        return false
       end
 
       app_name = options[:app_name] || File.basename(File.expand_path('.'))
@@ -47,14 +47,14 @@ module Circus
     
     def admit(name, apps, options)
       booth = get_booth_or_default(name)
-      return unless booth
+      return false unless booth
 
       repo_helper = Repos.find_repo_by_id(booth[:repo_type]).new(File.expand_path('.'))
       current_rev = repo_helper.current_revision
 
       unless current_rev
-          @logger.error("Could not detect current repository version")
-          return false
+        @logger.error("Could not detect current repository version")
+        return false
       end
       
       @logger.info("Starting admission into #{name} of version #{current_rev}")
@@ -71,13 +71,15 @@ module Circus
       end
       admitted = Circus::Agents::Encoding.decode(client.admit(booth[:booth], booth[:booth_id], current_rev, apply_patch_fn, apps).result)
       
-      return if booth[:target] == 'none'
+      return false if booth[:target] == 'none'
       clown_connection = ConnectionBuilder.new(options).build(booth[:target])
       clown_client = ClownClient.new(clown_connection, @logger)
       admitted.each do |name, url|
         @logger.info("Executing deployment of #{name} from #{url} to #{booth[:target]}")
         clown_client.deploy(booth[:target], name, url).result
       end
+      
+      true
     end
       
     private
