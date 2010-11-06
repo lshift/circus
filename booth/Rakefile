@@ -1,14 +1,12 @@
 begin
-  require 'spec/rake/spectask'
+  require 'rspec/core/rake_task'
 rescue LoadError
-  raise 'Run `gem install rspec` to be able to run specs'
+  $stderr.puts 'Run `gem install rspec -v "~> 2.0.0"` to be able to run specs'
 else
   desc "Run specs"
-  Spec::Rake::SpecTask.new do |t|
-    t.spec_files = FileList['spec/**/*_spec.rb']
-    t.spec_opts = %w(-fs --color)
+  RSpec::Core::RakeTask.new do |t|
+    t.pattern = 'spec/**/*_spec.rb'
+    t.rspec_opts = %w(-fs --color)
     t.ruby_opts = ['-rspec/helpers/env']
-    t.warning = true
-    t.libs = ['lib']
   end
 end

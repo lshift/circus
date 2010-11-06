@@ -8,4 +8,4 @@ requirements:
   user-profile: 
     - booth
   system-properties:
-    GEM_HOME: "$HOME/.gem"
+    GEM_HOME: "$HOME/.gem/ruby/1.8"
