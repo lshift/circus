@@ -3,7 +3,6 @@
 run_list:
 - recipe[bundler]
 - recipe[openssl]
-- recipe[squashfs]
 - recipe[mercurial]
 - recipe[git]
 - recipe[build]
