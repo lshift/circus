@@ -31,6 +31,15 @@ module Circus
               "cd #{@dir}; ruby #{BUNDLER_TOOL} && rm Gemfile.lock && bundle install vendor/bundle")
         end
         
+        if @props['package-cmds']
+          @props['package-cmds'].each do |cmd|
+            logger.info("Executing custom package command: #{cmd}")
+            run_cmd = if has_gemfile? then "cd #{@dir}; bundle exec #{cmd}" else "cd #{@dir}; #{cmd}" end
+            
+            return false unless run_external(logger, 'packaging command: ' + cmd, run_cmd)
+          end
+        end
+        
         true
       end
       
