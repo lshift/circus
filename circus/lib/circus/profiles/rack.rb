@@ -25,18 +25,31 @@ module Circus
       
       def dev_run_script_content
         shell_run_script do
-          <<-EOT
-          cd #{@dir}
-          exec bundle exec thin -R #{@rackup_name} -p #{listen_port} start
-          EOT
+          if @props['rackup-command'] == 'unicorn'
+            <<-EOT
+            cd #{@dir}
+            exec bundle exec unicorn -p #{listen_port} #{@rackup_name}
+            EOT
+          else
+            <<-EOT
+            cd #{@dir}
+            exec bundle exec thin -R #{@rackup_name} -p #{listen_port} start
+            EOT
+          end
         end
       end
 
       def deploy_run_script_content
         shell_run_script do
-          <<-EOT
-          exec bundle exec thin -R #{@rackup_name} -p #{listen_port} start
-          EOT
+          if @props['rackup-command'] == 'unicorn'
+            <<-EOT
+            exec bundle exec unicorn -p #{listen_port} #{@rackup_name}
+            EOT
+          else
+            <<-EOT
+            exec bundle exec thin -R #{@rackup_name} -p #{listen_port} start
+            EOT
+          end
         end
       end
       

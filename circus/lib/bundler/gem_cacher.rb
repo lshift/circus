@@ -25,10 +25,8 @@ Bundler.definition.specs.each do |spec|
     sf.write(spec.to_ruby)
   end
   in_dir_spec = "#{install_path}/#{spec.name}.gemspec"
-  unless File.exists? in_dir_spec
-    File.open(in_dir_spec, 'w') do |sf|
-      sf.write(spec.to_ruby)
-    end
+  File.open(in_dir_spec, 'w') do |sf|
+    sf.write(spec.to_ruby)
   end
 end
 

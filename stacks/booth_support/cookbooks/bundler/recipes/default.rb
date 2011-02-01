@@ -18,7 +18,7 @@ execute "install rubygems-1.3.7" do
 end
 
 gem_package 'bundler' do
-  version '1.0.0'
+  version '1.0.10'
   action :install
   gem_binary "/usr/bin/gem"
 end
