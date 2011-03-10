@@ -26,7 +26,7 @@ module Circus
         # Run the gem bundler if necessary
         if has_gemfile?
           logger.info("Bundling gems")
-          return false unless run_external(logger, 'gem installation', "cd #{@dir}; bundle install")
+          return false unless run_external(logger, 'gem installation', "cd #{@dir}; bundle install --without \"development test\"")
           return false unless run_external(logger, 'gem caching', 
               "cd #{@dir}; ruby #{BUNDLER_TOOL} && rm Gemfile.lock && bundle install vendor/bundle")
         end
